@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "autoname": "IT-RESP-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["employee","employee_name","employee_user","column_break_assignment","supervisor","supervisor_user","assignment_section","location","responsibility_type","checklist_template","column_break_dates","start_date","end_date","is_active","notes"],
+ "fields": [
+  {"fieldname":"employee","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"Employee","options":"Employee","reqd":1},
+  {"fetch_from":"employee.employee_name","fieldname":"employee_name","fieldtype":"Data","label":"Employee Name","read_only":1},
+  {"fieldname":"employee_user","fieldtype":"Link","hidden":1,"label":"Employee User","options":"User","read_only":1},
+  {"fieldname":"column_break_assignment","fieldtype":"Column Break"},
+  {"fieldname":"supervisor","fieldtype":"Link","in_standard_filter":1,"label":"Supervisor","options":"Employee"},
+  {"fieldname":"supervisor_user","fieldtype":"Link","hidden":1,"label":"Supervisor User","options":"User","read_only":1},
+  {"fieldname":"assignment_section","fieldtype":"Section Break","label":"Responsibility"},
+  {"fieldname":"location","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"Location","options":"IT Location","reqd":1},
+  {"fieldname":"responsibility_type","fieldtype":"Data","in_list_view":1,"in_standard_filter":1,"label":"Responsibility Type","reqd":1},
+  {"fieldname":"checklist_template","fieldtype":"Link","in_list_view":1,"label":"Checklist Template","options":"IT Checklist Template","reqd":1},
+  {"fieldname":"column_break_dates","fieldtype":"Column Break"},
+  {"default":"Today","fieldname":"start_date","fieldtype":"Date","in_standard_filter":1,"label":"Effective From","reqd":1},
+  {"fieldname":"end_date","fieldtype":"Date","in_standard_filter":1,"label":"Effective To"},
+  {"default":"1","fieldname":"is_active","fieldtype":"Check","in_list_view":1,"label":"Active"},
+  {"fieldname":"notes","fieldtype":"Small Text","label":"Notes"}
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "module": "IT Operations",
+ "name": "IT Responsibility Assignment",
+ "permissions": [
+  {"read":1,"role":"IT Operations User"},
+  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Supervisor"},
+  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Manager"},
+  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"System Manager"}
+ ],
+ "search_fields": "employee_name,location,responsibility_type",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name"
+}

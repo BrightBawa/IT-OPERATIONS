@@ -1,0 +1,21 @@
+{
+ "cards": [
+  {"card":"Today's Operations Logs"},
+  {"card":"Today's Submitted Logs"},
+  {"card":"Today's IT Faults"},
+  {"card":"Today's IT Exceptions"}
+ ],
+ "charts": [
+  {"chart":"Daily Submission Status"},
+  {"chart":"Operations Completion Trend"},
+  {"chart":"IT Faults By Day"}
+ ],
+ "dashboard_name": "IT Operations Manager Dashboard",
+ "docstatus": 0,
+ "doctype": "Dashboard",
+ "is_default": 0,
+ "is_standard": 1,
+ "module": "IT Operations",
+ "name": "IT Operations Manager Dashboard",
+ "owner": "Administrator"
+}

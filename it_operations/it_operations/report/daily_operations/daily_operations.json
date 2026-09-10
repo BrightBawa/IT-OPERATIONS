@@ -1,0 +1,18 @@
+{
+ "add_total_row": 0,
+ "disabled": 0,
+ "doctype": "Report",
+ "is_standard": "Yes",
+ "module": "IT Operations",
+ "name": "Daily Operations",
+ "prepared_report": 0,
+ "ref_doctype": "IT Daily Operations Log",
+ "report_name": "Daily Operations",
+ "report_type": "Script Report",
+ "roles": [
+  {"role":"IT Operations User"},
+  {"role":"IT Operations Supervisor"},
+  {"role":"IT Operations Manager"},
+  {"role":"System Manager"}
+ ]
+}

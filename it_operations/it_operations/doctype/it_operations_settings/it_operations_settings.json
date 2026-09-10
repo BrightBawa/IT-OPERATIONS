@@ -1,0 +1,24 @@
+{
+ "actions": [],
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["generation_section","enable_daily_generation","instructions"],
+ "fields": [
+  {"fieldname":"generation_section","fieldtype":"Section Break","label":"Daily Log Generation"},
+  {"default":"1","description":"The daily scheduler creates one log per active assigned employee. Running it again is safe.","fieldname":"enable_daily_generation","fieldtype":"Check","label":"Enable Daily Generation"},
+  {"fieldname":"instructions","fieldtype":"HTML","options":"<p>Daily logs are built from active responsibility assignments and active checklist templates. Use <b>Regenerate from Assignments</b> on a draft log to add missing items without duplicating or overwriting completed checks.</p>"}
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "module": "IT Operations",
+ "name": "IT Operations Settings",
+ "permissions": [
+  {"read":1,"role":"IT Operations Supervisor"},
+  {"email":1,"print":1,"read":1,"share":1,"write":1,"role":"IT Operations Manager"},
+  {"email":1,"print":1,"read":1,"share":1,"write":1,"role":"System Manager"}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

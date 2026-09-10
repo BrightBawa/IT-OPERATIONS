@@ -8,7 +8,7 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["erpnext", "hrms"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -86,7 +86,8 @@ app_license = "mit"
 # ------------
 
 # before_install = "it_operations.install.before_install"
-# after_install = "it_operations.install.after_install"
+after_install = "it_operations.install.after_install"
+after_migrate = "it_operations.install.after_migrate"
 
 # Uninstallation
 # ------------
@@ -126,13 +127,15 @@ app_license = "mit"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+permission_query_conditions = {
+	"IT Daily Operations Log": "it_operations.permissions.daily_log_query",
+	"IT Responsibility Assignment": "it_operations.permissions.assignment_query",
+}
+
+has_permission = {
+	"IT Daily Operations Log": "it_operations.permissions.daily_log_permission",
+	"IT Responsibility Assignment": "it_operations.permissions.assignment_permission",
+}
 
 # Document Events
 # ---------------
@@ -149,23 +152,11 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"it_operations.tasks.all"
-# 	],
-# 	"daily": [
-# 		"it_operations.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"it_operations.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"it_operations.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"it_operations.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": [
+		"it_operations.tasks.generate_daily_operations_logs"
+	],
+}
 
 # Testing
 # -------
@@ -255,4 +246,3 @@ app_license = "mit"
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

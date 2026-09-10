@@ -1,0 +1,24 @@
+{
+ "actions": [],
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["check_title","check_type","monitoring_point","equipment","mandatory","instructions"],
+ "fields": [
+  {"fieldname":"check_title","fieldtype":"Data","in_list_view":1,"label":"Check","reqd":1},
+  {"default":"General","fieldname":"check_type","fieldtype":"Select","in_list_view":1,"label":"Check Type","options":"General\nCamera\nNetwork\nServer\nEquipment\nService","reqd":1},
+  {"fieldname":"monitoring_point","fieldtype":"Link","in_list_view":1,"label":"Monitoring Point","options":"IT Monitoring Point"},
+  {"fieldname":"equipment","fieldtype":"Link","label":"Equipment","options":"IT Equipment"},
+  {"default":"1","fieldname":"mandatory","fieldtype":"Check","in_list_view":1,"label":"Mandatory"},
+  {"fieldname":"instructions","fieldtype":"Small Text","label":"Instructions"}
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "module": "IT Operations",
+ "name": "IT Checklist Template Item",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

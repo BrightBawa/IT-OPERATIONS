@@ -1,33 +1,26 @@
-### IT Operations
+# IT Operations
 
-Daily IT operations, routine checks, camera monitoring, and activity reporting
+A standalone Frappe app for routine IT checks, CCTV monitoring, operational activities, and daily reporting. It does not depend on or create Helpdesk tickets.
 
-### Installation
+## Initial setup
 
-You can install this app using the [bench](https://github.com/frappe/bench) CLI:
+1. Assign `IT Operations User`, `IT Operations Supervisor`, and `IT Operations Manager` roles as appropriate.
+2. Create IT Locations and Monitoring Points. Locations are records, so campuses, blocks, buildings, and rooms are never hard-coded.
+3. Create Checklist Templates and their mandatory/optional items.
+4. Create Responsibility Assignments linking an active Employee, location, responsibility type, supervisor, and template.
+5. Leave **Enable Daily Generation** selected in IT Operations Settings.
+
+The daily scheduler creates one draft log for each active assigned employee. Re-running it is idempotent: existing checklist work is retained and only missing assignment/template items are appended. Staff can also use **Generate / Regenerate Today** from the daily-log list or **Regenerate from Assignments** within a draft log.
+
+Access is enforced by server hooks: users see their own logs, supervisors see their own and explicitly assigned team logs, and managers see all records. Submission is blocked until mandatory checks are addressed, and fault/exception rows require remarks. Check, activity, and submission audit fields are stamped on the server.
+
+## Installation
 
 ```bash
-cd $PATH_TO_YOUR_BENCH
-bench get-app $URL_OF_THIS_REPO --branch version-16
-bench install-app it_operations
+bench get-app <repository-url> --branch version-16
+bench --site <site-name> install-app it_operations
 ```
 
-### Contributing
+## License
 
-This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
-
-```bash
-cd apps/it_operations
-pre-commit install
-```
-
-Pre-commit is configured to use the following tools for checking and formatting your code:
-
-- ruff
-- eslint
-- prettier
-- pyupgrade
-
-### License
-
-mit
+MIT
