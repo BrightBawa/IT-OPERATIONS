@@ -1,4 +1,6 @@
 import frappe
+from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+from frappe.permissions import setup_custom_perms
 from frappe.utils.nestedset import rebuild_tree
 
 
@@ -16,12 +18,122 @@ BLOCK_C_CLASSROOM_FLOORS = {
 	"B08F2": 8,
 }
 
+LOCATION_TYPES = "Campus\nBlock\nBuilding\nFloor\nRoom\nOutdoor Area\nOther"
+GROUP_TYPES = {"Campus", "Block", "Building", "Floor"}
+LOCATION_CUSTOM_FIELDS = {
+	"Location": (
+		{
+			"fieldname": "custom_it_operations_details",
+			"fieldtype": "Section Break",
+			"insert_after": "is_group",
+			"label": "IT Operations Details",
+		},
+		{
+			"fieldname": "custom_it_location_type",
+			"fieldtype": "Select",
+			"insert_after": "custom_it_operations_details",
+			"label": "IT Location Type",
+			"options": LOCATION_TYPES,
+			"in_standard_filter": 1,
+		},
+		{
+			"fieldname": "custom_it_location_code",
+			"fieldtype": "Data",
+			"insert_after": "custom_it_location_type",
+			"label": "IT Location Code",
+			"in_list_view": 1,
+		},
+		{
+			"fieldname": "custom_it_location_column",
+			"fieldtype": "Column Break",
+			"insert_after": "custom_it_location_code",
+		},
+		{
+			"fieldname": "custom_campus_branch",
+			"fieldtype": "Link",
+			"insert_after": "custom_it_location_column",
+			"label": "Campus / Branch",
+			"options": "Branch",
+			"in_standard_filter": 1,
+		},
+		{
+			"fieldname": "custom_assigned_class",
+			"fieldtype": "Link",
+			"insert_after": "custom_campus_branch",
+			"label": "Assigned Class",
+			"options": "Student Batch Name",
+			"depends_on": "eval:doc.custom_it_location_type=='Room'",
+			"in_standard_filter": 1,
+		},
+		{
+			"fieldname": "custom_it_description",
+			"fieldtype": "Small Text",
+			"insert_after": "custom_assigned_class",
+			"label": "IT Location Description",
+		},
+	)
+}
+
+LOCATION_ROLE_PERMISSIONS = {
+	"IT Operations User": {"read": 1},
+	"IT Operations Supervisor": {
+		"read": 1,
+		"write": 1,
+		"create": 1,
+		"delete": 1,
+		"report": 1,
+		"export": 1,
+		"print": 1,
+		"email": 1,
+		"share": 1,
+	},
+	"IT Operations Manager": {
+		"read": 1,
+		"write": 1,
+		"create": 1,
+		"delete": 1,
+		"report": 1,
+		"export": 1,
+		"print": 1,
+		"email": 1,
+		"share": 1,
+	},
+}
+
+
+def ensure_asset_location_setup():
+	create_custom_fields(LOCATION_CUSTOM_FIELDS, update=True)
+	ensure_location_permissions()
+
+
+def ensure_location_permissions():
+	setup_custom_perms("Location")
+	for role, permissions in LOCATION_ROLE_PERMISSIONS.items():
+		name = frappe.db.get_value(
+			"Custom DocPerm", {"parent": "Location", "role": role, "permlevel": 0}, "name"
+		)
+		if name:
+			doc = frappe.get_doc("Custom DocPerm", name)
+		else:
+			doc = frappe.get_doc(
+				{
+					"doctype": "Custom DocPerm",
+					"parent": "Location",
+					"parenttype": "DocType",
+					"parentfield": "permissions",
+					"role": role,
+					"permlevel": 0,
+				}
+			)
+		doc.update(permissions)
+		doc.save(ignore_permissions=True)
+	frappe.clear_cache(doctype="Location")
+
 
 def seed():
-	"""Create campus roots and place the existing Block C hierarchy under SOC."""
-	if frappe.db.has_column("IT Location", "lft"):
-		rebuild_tree("IT Location")
-
+	"""Create the campus and Block C hierarchy in ERPNext Asset Locations."""
+	ensure_asset_location_setup()
+	rebuild_tree("Location")
 	campuses = {
 		code: ensure_location(name, code, "Campus", campus=branch, description=description)
 		for name, code, branch, description in CAMPUS_DEFINITIONS
@@ -29,14 +141,12 @@ def seed():
 	block_c = ensure_location("Block C", "BLOCK-C", "Block", parent_location=campuses["SOC"])
 	for floor_code, room_count in BLOCK_C_CLASSROOM_FLOORS.items():
 		ensure_classroom_floor(block_c, floor_code, room_count)
-	_normalize_block_c_labels(block_c)
-	rebuild_tree("IT Location")
-	_refresh_location_metadata()
+	rebuild_tree("Location")
 	return {"campuses": campuses, "block_c": block_c}
 
 
 def ensure_classroom_floor(block, floor_code, room_count):
-	"""Create a floor and its sequential CR01..CRnn room locations."""
+	"""Create an Asset Location floor and its sequential CR01..CRnn room locations."""
 	floor = ensure_location(floor_code, floor_code, "Floor", parent_location=block)
 	rooms = [
 		ensure_location(
@@ -57,92 +167,32 @@ def ensure_location(
 	parent_location=None,
 	campus=None,
 	description=None,
+	assigned_class=None,
 ):
-	filters = {"location_code": location_code, "parent_location": parent_location or ("is", "not set")}
-	existing = frappe.db.get_value("IT Location", filters, "name")
-	if not existing and location_code == "BLOCK-C":
-		existing = frappe.db.get_value("IT Location", {"location_code": location_code}, "name")
-
+	"""Create or reconcile one standard ERPNext Asset Location."""
+	existing = frappe.db.get_value("Location", {"location_name": location_name}, "name")
 	if existing:
-		doc = frappe.get_doc("IT Location", existing)
-		doc.location_name = location_name
-		doc.location_type = location_type
-		doc.parent_location = parent_location
-		if location_type == "Campus":
-			doc.campus = campus
-		doc.is_active = 1
-		if description:
-			doc.description = description
-		doc.save(ignore_permissions=True)
-		return doc.name
-
-	return frappe.get_doc(
-		{
-			"doctype": "IT Location",
-			"location_name": location_name,
-			"location_code": location_code,
-			"location_type": location_type,
-			"parent_location": parent_location,
-			"campus": campus,
-			"is_active": 1,
-			"description": description,
-		}
-	).insert(ignore_permissions=True).name
-
-
-def _normalize_block_c_labels(block_c):
-	locations = frappe.get_all(
-		"IT Location",
-		filters={"name": ("like", "Block C - %")},
-		fields=["name", "location_code", "location_type"],
-	)
-	for location in locations:
-		if location.location_type in {"Floor", "Room"} and location.location_code:
-			frappe.db.set_value(
-				"IT Location",
-				location.name,
-				{
-					"location_name": location.location_code,
-					"is_group": 1 if location.location_type == "Floor" else 0,
-				},
-				update_modified=False,
+		doc = frappe.get_doc("Location", existing)
+		if (doc.parent_location or None) != (parent_location or None):
+			frappe.throw(
+				f"Asset Location {location_name} already exists beneath {doc.parent_location or 'the root'}, "
+				f"not {parent_location or 'the root'}."
 			)
+	else:
+		doc = frappe.new_doc("Location")
+		doc.location_name = location_name
+		doc.parent_location = parent_location
 
-	frappe.db.set_value("IT Location", block_c, "is_group", 1, update_modified=False)
-
-
-def _refresh_location_metadata():
-	roots = frappe.get_all(
-		"IT Location",
-		filters={"parent_location": ("is", "not set")},
-		fields=["name", "location_name", "location_type"],
-		order_by="lft asc",
-	)
-	for root in roots:
-		campus = frappe.db.get_value("IT Location", root.name, "campus")
-		frappe.db.set_value(
-			"IT Location",
-			root.name,
-			{"campus": campus, "full_location_path": root.location_name},
-			update_modified=False,
-		)
-		_refresh_children(root.name, campus, root.location_name)
-
-
-def _refresh_children(parent, campus, parent_path):
-	children = frappe.get_all(
-		"IT Location",
-		filters={"parent_location": parent},
-		fields=["name", "location_name", "location_type"],
-		order_by="lft asc",
-	)
-	for child in children:
-		child_campus = campus
-		path = f"{parent_path} / {child.location_name}"
-		frappe.db.set_value(
-			"IT Location",
-			child.name,
-			{"campus": child_campus, "full_location_path": path},
-			update_modified=False,
-		)
-		_refresh_children(child.name, child_campus, path)
+	branch = campus
+	if location_type != "Campus" and parent_location:
+		branch = frappe.db.get_value("Location", parent_location, "custom_campus_branch")
+	doc.is_group = 1 if location_type in GROUP_TYPES else 0
+	doc.custom_it_location_type = location_type
+	doc.custom_it_location_code = location_code
+	doc.custom_campus_branch = branch
+	if assigned_class is not None:
+		doc.custom_assigned_class = assigned_class
+	if description is not None:
+		doc.custom_it_description = description
+	doc.save(ignore_permissions=True)
+	return doc.name

@@ -11,7 +11,7 @@
   {"fieldname":"asset","fieldtype":"Link","in_standard_filter":1,"label":"ERPNext Asset","options":"Asset"},
   {"fieldname":"serial_number","fieldtype":"Data","label":"Serial Number","unique":1},
   {"fieldname":"column_break_equipment","fieldtype":"Column Break"},
-  {"fieldname":"location","fieldtype":"Link","in_list_view":1,"label":"Location","options":"IT Location","reqd":1},
+  {"fieldname":"location","fieldtype":"Link","in_list_view":1,"label":"Asset Location","options":"Location","reqd":1},
   {"fieldname":"monitoring_point","fieldtype":"Link","label":"Monitoring Point","options":"IT Monitoring Point"},
   {"default":"Operational","fieldname":"status","fieldtype":"Select","in_list_view":1,"in_standard_filter":1,"label":"Status","options":"Operational\nDegraded\nFaulty\nOut of Service\nRetired","reqd":1},
   {"default":"1","fieldname":"is_active","fieldtype":"Check","label":"Active"},

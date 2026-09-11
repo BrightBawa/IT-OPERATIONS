@@ -40,7 +40,7 @@
   {"columns":3,"fieldname":"check_title","fieldtype":"Data","in_list_view":1,"label":"Device / Check","read_only":1,"reqd":1},
   {"fieldname":"check_type","fieldtype":"Select","label":"Type","options":"General\nCamera\nNetwork\nServer\nEquipment\nService","read_only":1},
   {"fieldname":"device_kind","fieldtype":"Data","label":"Device Type","read_only":1},
-  {"columns":2,"fieldname":"location","fieldtype":"Link","in_list_view":1,"label":"Location","options":"IT Location","read_only":1},
+  {"columns":2,"fieldname":"location","fieldtype":"Link","in_list_view":1,"label":"Asset Location","options":"Location","read_only":1},
   {"fieldname":"monitoring_point","fieldtype":"Link","label":"Monitoring Point","options":"IT Monitoring Point","read_only":1},
   {"fieldname":"equipment","fieldtype":"Link","label":"Equipment","options":"IT Equipment","read_only":1},
   {"depends_on":"eval:doc.device_kind","fieldname":"device_details_section","fieldtype":"Section Break","label":"Device Details"},

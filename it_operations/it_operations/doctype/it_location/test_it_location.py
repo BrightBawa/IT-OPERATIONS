@@ -1,97 +1,89 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from it_operations.setup.locations import ensure_classroom_floor
+from it_operations.setup.locations import ensure_classroom_floor, ensure_location
 
 
-IGNORE_TEST_RECORD_DEPENDENCIES = ["Student Batch Name"]
+IGNORE_TEST_RECORD_DEPENDENCIES = ["Location", "Student Batch Name"]
 
 
-class IntegrationTestITLocation(IntegrationTestCase):
+class IntegrationTestAssetLocation(IntegrationTestCase):
 	def test_campus_block_floor_room_hierarchy(self):
-		suffix = frappe.generate_hash(length=8)
+		suffix = frappe.generate_hash(length=8).upper()
 		student_batch = self._insert_student_batch(f"Test Batch {suffix}")
 		branch = self._insert_branch(f"Test Branch {suffix}")
-		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
-		block = self._insert("Block A", "Block", campus.name)
-		floor = self._insert("F1", "Floor", block.name)
-		room = self._insert("B01F1CR01", "Room", floor.name, assigned_class=student_batch.name)
-
-		self.assertEqual(block.campus, branch.name)
-		self.assertEqual(room.campus, branch.name)
-		self.assertEqual(
-			room.full_location_path,
-			f"{campus.location_name} / Block A / F1 / B01F1CR01",
+		campus = ensure_location(
+			f"Test Campus {suffix}", f"TC-{suffix}", "Campus", campus=branch.name
 		)
-		self.assertEqual(room.is_group, 0)
-		self.assertEqual(room.assigned_class, student_batch.name)
-		campus.reload()
-		self.assertGreater(campus.rgt, room.rgt)
-		self.assertLess(campus.lft, room.lft)
+		block = ensure_location(
+			f"Test Block {suffix}", f"TB-{suffix}", "Block", parent_location=campus
+		)
+		floor = ensure_location(
+			f"Test Floor {suffix}", f"TF-{suffix}", "Floor", parent_location=block
+		)
+		room = ensure_location(
+			f"Test Room {suffix}",
+			f"TR-{suffix}",
+			"Room",
+			parent_location=floor,
+			assigned_class=student_batch.name,
+		)
 
-		second_branch = self._insert_branch(f"Second Branch {suffix}")
-		second_campus = self._insert(f"Second Campus {suffix}", "Campus", campus=second_branch.name)
-		second_block = self._insert("Block A", "Block", second_campus.name)
-		self.assertEqual(second_block.location_name, block.location_name)
-		self.assertNotEqual(second_block.name, block.name)
+		block_doc = frappe.get_doc("Location", block)
+		room_doc = frappe.get_doc("Location", room)
+		campus_doc = frappe.get_doc("Location", campus)
+		self.assertEqual(block_doc.custom_campus_branch, branch.name)
+		self.assertEqual(room_doc.custom_campus_branch, branch.name)
+		self.assertEqual(room_doc.custom_assigned_class, student_batch.name)
+		self.assertEqual(room_doc.is_group, 0)
+		self.assertGreater(campus_doc.rgt, room_doc.rgt)
+		self.assertLess(campus_doc.lft, room_doc.lft)
 
-	def test_non_campus_location_requires_valid_parent(self):
-		with self.assertRaises(frappe.ValidationError):
-			self._insert("Orphan Block", "Block")
+	def test_existing_location_cannot_be_silently_moved(self):
+		suffix = frappe.generate_hash(length=8).upper()
+		first_parent = ensure_location(
+			f"First Parent {suffix}", f"FP-{suffix}", "Campus"
+		)
+		second_parent = ensure_location(
+			f"Second Parent {suffix}", f"SP-{suffix}", "Campus"
+		)
+		child_name = f"Test Child {suffix}"
+		ensure_location(child_name, f"TC-{suffix}", "Block", parent_location=first_parent)
 
-		suffix = frappe.generate_hash(length=8)
-		student_batch = self._insert_student_batch(f"Test Batch {suffix}")
-		branch = self._insert_branch(f"Test Branch {suffix}")
-		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
-		block = self._insert("Block A", "Block", campus.name)
 		with self.assertRaises(frappe.ValidationError):
-			self._insert("Invalid Room", "Room", campus.name)
-		with self.assertRaises(frappe.ValidationError):
-			self._insert(
-				"Invalid Assigned Class", "Floor", block.name, assigned_class=student_batch.name
-			)
+			ensure_location(child_name, f"TC-{suffix}", "Block", parent_location=second_parent)
 
 	def test_ensure_classroom_floor_creates_sequential_room_codes(self):
 		suffix = frappe.generate_hash(length=8).upper()
-		branch = self._insert_branch(f"Test Branch {suffix}")
-		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
-		block = self._insert("Block C", "Block", campus.name)
+		campus = ensure_location(f"Test Campus {suffix}", f"TC-{suffix}", "Campus")
+		block = ensure_location(
+			f"Test Block {suffix}", f"TB-{suffix}", "Block", parent_location=campus
+		)
 		floor_code = f"T{suffix}F2"
 
-		floor, rooms = ensure_classroom_floor(block.name, floor_code, 8)
-		second_floor, second_rooms = ensure_classroom_floor(block.name, floor_code, 8)
+		floor, rooms = ensure_classroom_floor(block, floor_code, 8)
+		second_floor, second_rooms = ensure_classroom_floor(block, floor_code, 8)
 
-		self.assertEqual(frappe.db.get_value("IT Location", floor, "location_type"), "Floor")
+		self.assertEqual(
+			frappe.db.get_value("Location", floor, "custom_it_location_type"), "Floor"
+		)
 		self.assertEqual(len(rooms), 8)
 		self.assertEqual(second_floor, floor)
 		self.assertEqual(second_rooms, rooms)
 		self.assertEqual(
 			frappe.get_all(
-				"IT Location",
+				"Location",
 				filters={"parent_location": floor},
-				pluck="location_code",
-				order_by="location_code asc",
+				pluck="custom_it_location_code",
+				order_by="custom_it_location_code asc",
 			),
 			[f"{floor_code}CR{room_number:02d}" for room_number in range(1, 9)],
 		)
 
-	def _insert(
-		self, location_name, location_type, parent_location=None, campus=None, assigned_class=None
-	):
-		return frappe.get_doc(
-			{
-				"doctype": "IT Location",
-				"location_name": location_name,
-				"location_type": location_type,
-				"parent_location": parent_location,
-				"campus": campus,
-				"assigned_class": assigned_class,
-				"is_active": 1,
-			}
-		).insert(ignore_permissions=True)
-
 	def _insert_branch(self, branch_name):
-		return frappe.get_doc({"doctype": "Branch", "branch": branch_name}).insert(ignore_permissions=True)
+		return frappe.get_doc({"doctype": "Branch", "branch": branch_name}).insert(
+			ignore_permissions=True
+		)
 
 	def _insert_student_batch(self, batch_name):
 		return frappe.get_doc(

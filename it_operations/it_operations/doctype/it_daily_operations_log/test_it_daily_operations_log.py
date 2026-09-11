@@ -13,7 +13,7 @@ EXTRA_TEST_RECORD_DEPENDENCIES = []
 IGNORE_TEST_RECORD_DEPENDENCIES = [
 	"Employee",
 	"User",
-	"IT Location",
+	"Location",
 	"IT Monitoring Point",
 	"IT Equipment",
 	"IT Responsibility Assignment",
@@ -39,37 +39,30 @@ class IntegrationTestITDailyOperationsLog(IntegrationTestCase):
 		}[self._testMethodName]
 		self.test_date = getdate(add_days("2098-01-01", test_day))
 		self.suffix = frappe.generate_hash(length=8)
-		self.branch = frappe.get_doc(
-			{
-				"doctype": "Branch",
-				"branch": f"Test IT Branch {self.suffix}",
-			}
-		).insert(ignore_permissions=True)
 		self.campus = frappe.get_doc(
 			{
-				"doctype": "IT Location",
+				"doctype": "Location",
 				"location_name": f"Test Campus {self.suffix}",
-				"location_type": "Campus",
-				"campus": self.branch.name,
-				"is_active": 1,
+				"custom_it_location_type": "Campus",
+				"is_group": 1,
 			}
 		).insert(ignore_permissions=True)
 		self.block = frappe.get_doc(
 			{
-				"doctype": "IT Location",
+				"doctype": "Location",
 				"location_name": f"Test Block {self.suffix}",
-				"location_type": "Block",
+				"custom_it_location_type": "Block",
 				"parent_location": self.campus.name,
-				"is_active": 1,
+				"is_group": 1,
 			}
 		).insert(ignore_permissions=True)
 		self.location = frappe.get_doc(
 			{
-				"doctype": "IT Location",
-				"location_name": f"Test IT Location {self.suffix}",
-				"location_type": "Room",
+				"doctype": "Location",
+				"location_name": f"Test Asset Location {self.suffix}",
+				"custom_it_location_type": "Room",
 				"parent_location": self.block.name,
-				"is_active": 1,
+				"is_group": 0,
 			}
 		).insert(ignore_permissions=True)
 		self.point = frappe.get_doc(

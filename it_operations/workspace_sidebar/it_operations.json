@@ -80,8 +80,8 @@
    "icon": "map-pin",
    "indent": 0,
    "keep_closed": 0,
-   "label": "Locations",
-   "link_to": "IT Location",
+   "label": "Asset Locations",
+   "link_to": "Location",
    "link_type": "DocType",
    "show_arrow": 0,
    "type": "Link"

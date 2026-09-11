@@ -156,7 +156,6 @@ def import_block_a_devices(dry_run=True):
 
 
 def _validate_structure():
-	required_location_fields = {"location_name", "location_code", "location_type", "parent_location"}
 	required_equipment_fields = {
 		"equipment_name",
 		"equipment_type",
@@ -167,7 +166,7 @@ def _validate_structure():
 		"notes",
 	}
 	for doctype, required_fields in (
-		("IT Location", required_location_fields),
+		("Location", {"location_name", "parent_location", "custom_it_location_type"}),
 		("IT Equipment", required_equipment_fields),
 	):
 		if not frappe.db.exists("DocType", doctype):
@@ -180,35 +179,34 @@ def _validate_structure():
 
 def _get_soc_campus():
 	campuses = frappe.get_all(
-		"IT Location",
-		filters={"location_name": SOC_CAMPUS, "location_type": "Campus"},
-		fields=["name", "campus"],
+		"Location",
+		filters={"location_name": SOC_CAMPUS, "custom_it_location_type": "Campus"},
+		fields=["name", "custom_campus_branch"],
 	)
 	if len(campuses) != 1:
-		frappe.throw(f"Expected exactly one {SOC_CAMPUS} IT Location; found {len(campuses)}.")
+		frappe.throw(f"Expected exactly one {SOC_CAMPUS} Asset Location; found {len(campuses)}.")
 	return campuses[0]
 
 
 def _get_block_a(campus):
 	name = frappe.db.get_value(
-		"IT Location",
-		{"location_name": BLOCK_A, "location_type": "Block", "parent_location": campus},
+		"Location",
+		{
+			"location_name": BLOCK_A,
+			"custom_it_location_type": "Block",
+			"parent_location": campus,
+		},
 		"name",
 	)
-	return frappe.get_doc("IT Location", name) if name else None
+	return frappe.get_doc("Location", name) if name else None
 
 
 def _create_block_a(campus):
-	return frappe.get_doc(
-		{
-			"doctype": "IT Location",
-			"location_name": BLOCK_A,
-			"location_code": BLOCK_A_CODE,
-			"location_type": "Block",
-			"parent_location": campus,
-			"is_active": 1,
-		}
-	).insert(ignore_permissions=True)
+	from it_operations.setup.locations import ensure_asset_location_setup, ensure_location
+
+	ensure_asset_location_setup()
+	name = ensure_location(BLOCK_A, BLOCK_A_CODE, "Block", parent_location=campus)
+	return frappe.get_doc("Location", name)
 
 
 def _device_dict(values):

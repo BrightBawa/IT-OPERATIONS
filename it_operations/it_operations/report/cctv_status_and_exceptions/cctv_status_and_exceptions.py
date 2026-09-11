@@ -48,7 +48,7 @@ def get_columns():
 		{"label": _("Log"), "fieldname": "log", "fieldtype": "Link", "options": "IT Daily Operations Log", "width": 145},
 		{"label": _("Date"), "fieldname": "operation_date", "fieldtype": "Date", "width": 95},
 		{"label": _("Employee"), "fieldname": "employee_name", "fieldtype": "Data", "width": 160},
-		{"label": _("Location"), "fieldname": "location", "fieldtype": "Link", "options": "IT Location", "width": 140},
+		{"label": _("Asset Location"), "fieldname": "location", "fieldtype": "Link", "options": "Location", "width": 140},
 		{"label": _("Monitoring Point"), "fieldname": "monitoring_point", "fieldtype": "Link", "options": "IT Monitoring Point", "width": 170},
 		{"label": _("Camera ID"), "fieldname": "camera_identifier", "fieldtype": "Data", "width": 110},
 		{"label": _("IP Address"), "fieldname": "ip_address", "fieldtype": "Data", "width": 110},

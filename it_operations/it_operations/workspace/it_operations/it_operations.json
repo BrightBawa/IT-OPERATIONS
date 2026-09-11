@@ -20,7 +20,7 @@
   {"dependencies":"","hidden":0,"is_query_report":1,"label":"CCTV Status and Exceptions","link_count":0,"link_to":"CCTV Status and Exceptions","link_type":"Report","onboard":0,"report_ref_doctype":"IT Daily Operations Log","type":"Link"},
   {"dependencies":"","hidden":0,"is_query_report":1,"label":"Monthly Summary","link_count":0,"link_to":"IT Operations Monthly Summary","link_type":"Report","onboard":0,"report_ref_doctype":"IT Daily Operations Log","type":"Link"},
   {"hidden":0,"icon":"settings","is_query_report":0,"label":"Configuration","link_count":7,"onboard":0,"type":"Card Break"},
-  {"dependencies":"","hidden":0,"is_query_report":0,"label":"Locations","link_count":0,"link_to":"IT Location","link_type":"DocType","onboard":0,"type":"Link"},
+  {"dependencies":"","hidden":0,"is_query_report":0,"label":"Asset Locations","link_count":0,"link_to":"Location","link_type":"DocType","onboard":0,"type":"Link"},
   {"dependencies":"","hidden":0,"is_query_report":0,"label":"Monitoring Points","link_count":0,"link_to":"IT Monitoring Point","link_type":"DocType","onboard":0,"type":"Link"},
   {"dependencies":"","hidden":0,"is_query_report":0,"label":"Equipment","link_count":0,"link_to":"IT Equipment","link_type":"DocType","onboard":0,"type":"Link"},
   {"dependencies":"","hidden":0,"is_query_report":0,"label":"Checklist Templates","link_count":0,"link_to":"IT Checklist Template","link_type":"DocType","onboard":0,"type":"Link"},

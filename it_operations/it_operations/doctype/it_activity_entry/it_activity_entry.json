@@ -7,7 +7,7 @@
  "fields": [
   {"default":"Routine Maintenance","fieldname":"activity_type","fieldtype":"Select","in_list_view":1,"label":"Activity Type","options":"Routine Maintenance\nConfiguration\nInstallation\nUpdate\nBackup\nVendor Coordination\nDocumentation\nOther","reqd":1},
   {"fieldname":"summary","fieldtype":"Data","in_list_view":1,"label":"Summary","reqd":1},
-  {"fieldname":"location","fieldtype":"Link","in_list_view":1,"label":"Location","options":"IT Location"},
+  {"fieldname":"location","fieldtype":"Link","in_list_view":1,"label":"Asset Location","options":"Location"},
   {"fieldname":"equipment","fieldtype":"Link","label":"Equipment","options":"IT Equipment"},
   {"default":"Now","fieldname":"occurred_at","fieldtype":"Datetime","in_list_view":1,"label":"Occurred At","reqd":1},
   {"fieldname":"duration_minutes","fieldtype":"Int","label":"Duration (Minutes)","non_negative":1},

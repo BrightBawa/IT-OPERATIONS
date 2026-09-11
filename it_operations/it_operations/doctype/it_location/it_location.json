@@ -1,6 +1,6 @@
 {
  "actions": [],
- "allow_import": 1,
+ "allow_import": 0,
  "default_view": "Tree",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -45,10 +45,7 @@
  "name": "IT Location",
  "nsm_parent_field": "parent_location",
  "permissions": [
-  {"read":1,"role":"IT Operations User"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Supervisor"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Manager"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"System Manager"}
+  {"read":1,"role":"System Manager"}
  ],
  "quick_entry": 1,
  "search_fields": "location_name,location_code,assigned_class,full_location_path",

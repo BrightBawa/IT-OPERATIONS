@@ -19,7 +19,7 @@ def ensure_roles():
 
 
 def setup_workspace():
-	frappe.reload_doc("it_operations", "workspace", WORKSPACE_NAME)
+	frappe.reload_doc("it_operations", "workspace", WORKSPACE_NAME, force=True)
 	for folder_name in ("workspace_sidebar", "desktop_icon"):
 		import_file_by_path(
 			frappe.get_app_path(APP_NAME, folder_name, f"{WORKSPACE_NAME}.json"),
@@ -44,7 +44,10 @@ def after_install():
 
 
 def after_migrate():
+	from it_operations.setup.locations import ensure_asset_location_setup
+
 	ensure_roles()
+	ensure_asset_location_setup()
 	if frappe.db.get_single_value("IT Operations Settings", "enable_daily_generation") is None:
 		frappe.db.set_single_value("IT Operations Settings", "enable_daily_generation", 1)
 	setup_workspace()

@@ -11,3 +11,4 @@ it_operations.patches.assign_block_c_room_classes
 it_operations.patches.link_room_classes_to_student_batches
 it_operations.patches.create_responsibility_types
 it_operations.patches.seed_block_c_cctv
+it_operations.patches.migrate_to_asset_locations

@@ -117,7 +117,9 @@ def _set_assigned_class(location, student_batch):
 		frappe.throw(
 			f"Cannot assign room {location}: Student Batch Name {student_batch} does not exist."
 		)
-	frappe.db.set_value("IT Location", location, "assigned_class", student_batch, update_modified=False)
+	frappe.db.set_value(
+		"Location", location, "custom_assigned_class", student_batch, update_modified=False
+	)
 
 
 def _ensure_device(
