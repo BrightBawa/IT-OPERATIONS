@@ -14,7 +14,7 @@
   {"fieldname":"supervisor_user","fieldtype":"Link","hidden":1,"label":"Supervisor User","options":"User","read_only":1},
   {"fieldname":"assignment_section","fieldtype":"Section Break","label":"Responsibility"},
   {"fieldname":"location","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"Location","options":"IT Location","reqd":1},
-  {"fieldname":"responsibility_type","fieldtype":"Data","in_list_view":1,"in_standard_filter":1,"label":"Responsibility Type","reqd":1},
+  {"fieldname":"responsibility_type","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"Responsibility Type","options":"IT Responsibility Type","reqd":1},
   {"fieldname":"checklist_template","fieldtype":"Link","in_list_view":1,"label":"Checklist Template","options":"IT Checklist Template","reqd":1},
   {"fieldname":"column_break_dates","fieldtype":"Column Break"},
   {"default":"Today","fieldname":"start_date","fieldtype":"Date","in_standard_filter":1,"label":"Effective From","reqd":1},

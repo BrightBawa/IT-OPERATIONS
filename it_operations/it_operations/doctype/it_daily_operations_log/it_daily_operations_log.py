@@ -10,11 +10,31 @@ from it_operations.permissions import can_access_employee, employee_user
 
 ADDRESSED_STATUSES = {"OK", "Fault", "Exception", "Not Applicable"}
 ISSUE_STATUSES = {"Fault", "Exception"}
+PASSING_DEVICE_VALUES = {
+	"online_status": "Online",
+	"working_status": "Working",
+	"alignment_status": "Aligned",
+	"recording_status": "Recording",
+	"playback_status": "Working",
+}
+DEVICE_REQUIREMENTS = {
+	"CCTV Camera": tuple(PASSING_DEVICE_VALUES),
+	"Network Video Recorder": ("online_status", "working_status", "recording_status", "playback_status"),
+	"Television": ("working_status", "alignment_status", "playback_status"),
+	"Wireless Access Point": ("online_status", "working_status"),
+	"Network Switch": ("online_status", "working_status"),
+	"Router": ("online_status", "working_status"),
+	"Server": ("online_status", "working_status"),
+	"Computer": ("online_status", "working_status"),
+	"Printer": ("online_status", "working_status"),
+	"Other": ("working_status",),
+}
 
 
 class ITDailyOperationsLog(Document):
 	def before_validate(self):
 		self._set_identity_fields()
+		self._set_device_results()
 		self._stamp_check_items()
 		self._stamp_activity_entries()
 		self._set_summary()
@@ -94,9 +114,15 @@ class ITDailyOperationsLog(Document):
 		definition_fields = (
 			"check_title",
 			"check_type",
+			"device_kind",
 			"location",
 			"monitoring_point",
 			"equipment",
+			"device_name",
+			"channel_name",
+			"ip_address",
+			"model",
+			"serial_number",
 			"mandatory",
 			"instructions",
 			"responsibility_assignment",
@@ -131,6 +157,21 @@ class ITDailyOperationsLog(Document):
 			else:
 				row.checked_at = previous.checked_at
 				row.checked_by = previous.checked_by
+
+	def _set_device_results(self):
+		for row in self.check_items:
+			required_fields = DEVICE_REQUIREMENTS.get(row.device_kind)
+			if not required_fields:
+				continue
+			for field in PASSING_DEVICE_VALUES:
+				if field not in required_fields:
+					row.set(field, "Not Applicable")
+			if any((row.get(field) or "Not Checked") == "Not Checked" for field in required_fields):
+				row.status = "Pending"
+			elif all(row.get(field) == PASSING_DEVICE_VALUES[field] for field in required_fields):
+				row.status = "OK"
+			else:
+				row.status = "Fault"
 
 	def _stamp_activity_entries(self):
 		old_rows = {}
@@ -199,13 +240,41 @@ def _rows_for_assignment(assignment):
 	if not frappe.db.get_value("IT Checklist Template", assignment.checklist_template, "is_active"):
 		return []
 	template = frappe.get_doc("IT Checklist Template", assignment.checklist_template)
-	return [
-		{
+	rows = []
+	for item in template.items:
+		point = (
+			frappe.db.get_value(
+				"IT Monitoring Point",
+				item.monitoring_point,
+				["location", "camera_identifier", "camera_model", "ip_address", "nvr_channel"],
+				as_dict=True,
+			)
+			if item.monitoring_point
+			else None
+		)
+		equipment = (
+			frappe.db.get_value(
+				"IT Equipment",
+				item.equipment,
+				["equipment_name", "equipment_type", "serial_number"],
+				as_dict=True,
+			)
+			if item.equipment
+			else None
+		)
+		device_kind = equipment.equipment_type if equipment else None
+		row = {
 			"check_title": item.check_title,
 			"check_type": item.check_type,
-			"location": assignment.location,
+			"device_kind": device_kind,
+			"location": point.location if point and point.location else assignment.location,
 			"monitoring_point": item.monitoring_point,
 			"equipment": item.equipment,
+			"device_name": equipment.equipment_name if equipment else (point.camera_identifier if point else None),
+			"channel_name": point.nvr_channel if point else None,
+			"ip_address": point.ip_address if point else None,
+			"model": point.camera_model if point else None,
+			"serial_number": equipment.serial_number if equipment else None,
 			"mandatory": item.mandatory,
 			"status": "Pending",
 			"instructions": item.instructions,
@@ -213,8 +282,16 @@ def _rows_for_assignment(assignment):
 			"checklist_template": assignment.checklist_template,
 			"source_key": f"{assignment.name}::{item.name}",
 		}
-		for item in template.items
-	]
+		if device_kind in DEVICE_REQUIREMENTS:
+			required_fields = DEVICE_REQUIREMENTS[device_kind]
+			row.update(
+				{
+					field: "Not Checked" if field in required_fields else "Not Applicable"
+					for field in PASSING_DEVICE_VALUES
+				}
+			)
+		rows.append(row)
+	return rows
 
 
 def generate_logs(operation_date=None, employee=None, regenerate=False):

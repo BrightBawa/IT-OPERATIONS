@@ -2,37 +2,173 @@
  "actions": [],
  "allow_import": 1,
  "autoname": "field:point_name",
+ "creation": "2026-09-11 01:21:00.432659",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["point_name","location","point_type","is_active","camera_section","camera_identifier","camera_make","camera_model","column_break_camera","ip_address","nvr_name","nvr_channel","equipment","view_description","notes"],
- "fields": [
-  {"fieldname":"point_name","fieldtype":"Data","in_list_view":1,"label":"Monitoring Point","reqd":1,"unique":1},
-  {"fieldname":"location","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"Location","options":"IT Location","reqd":1},
-  {"default":"Camera","fieldname":"point_type","fieldtype":"Select","in_list_view":1,"label":"Point Type","options":"Camera\nNetwork Endpoint\nServer\nService\nOther","reqd":1},
-  {"default":"1","fieldname":"is_active","fieldtype":"Check","in_list_view":1,"label":"Active"},
-  {"fieldname":"camera_section","fieldtype":"Section Break","label":"Camera Details"},
-  {"depends_on":"eval:doc.point_type=='Camera'","fieldname":"camera_identifier","fieldtype":"Data","label":"Camera Identifier"},
-  {"depends_on":"eval:doc.point_type=='Camera'","fieldname":"camera_make","fieldtype":"Data","label":"Make"},
-  {"depends_on":"eval:doc.point_type=='Camera'","fieldname":"camera_model","fieldtype":"Data","label":"Model"},
-  {"fieldname":"column_break_camera","fieldtype":"Column Break"},
-  {"depends_on":"eval:doc.point_type=='Camera'","fieldname":"ip_address","fieldtype":"Data","label":"IP Address"},
-  {"depends_on":"eval:doc.point_type=='Camera'","fieldname":"nvr_name","fieldtype":"Data","label":"NVR / Recorder"},
-  {"depends_on":"eval:doc.point_type=='Camera'","fieldname":"nvr_channel","fieldtype":"Data","label":"NVR Channel"},
-  {"fieldname":"equipment","fieldtype":"Link","label":"Equipment Record","options":"IT Equipment"},
-  {"fieldname":"view_description","fieldtype":"Small Text","label":"Coverage / View Description"},
-  {"fieldname":"notes","fieldtype":"Small Text","label":"Notes"}
+ "field_order": [
+  "point_name",
+  "location",
+  "column_break_petc",
+  "point_type",
+  "is_active",
+  "camera_section",
+  "camera_identifier",
+  "camera_make",
+  "camera_model",
+  "view_description",
+  "column_break_camera",
+  "ip_address",
+  "nvr_name",
+  "nvr_channel",
+  "equipment",
+  "notes"
  ],
- "index_web_pages_for_search": 0,
+ "fields": [
+  {
+   "fieldname": "point_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Monitoring Point",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Location",
+   "options": "IT Location",
+   "reqd": 1
+  },
+  {
+   "default": "Camera",
+   "fieldname": "point_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Point Type",
+   "options": "Camera\nNetwork Video Recorder\nTelevision\nWireless Access Point\nNetwork Switch\nRouter\nNetwork Endpoint\nServer\nService\nOther",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Active"
+  },
+  {
+   "fieldname": "camera_section",
+   "fieldtype": "Section Break",
+   "label": "Device Details"
+  },
+  {
+   "fieldname": "camera_identifier",
+   "fieldtype": "Data",
+   "label": "Device Identifier"
+  },
+  {
+   "fieldname": "camera_make",
+   "fieldtype": "Data",
+   "label": "Make"
+  },
+  {
+   "fieldname": "camera_model",
+   "fieldtype": "Data",
+   "label": "Model"
+  },
+  {
+   "fieldname": "column_break_camera",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ip_address",
+   "fieldtype": "Data",
+   "label": "IP Address"
+  },
+  {
+   "depends_on": "eval:doc.point_type=='Camera'",
+   "fieldname": "nvr_name",
+   "fieldtype": "Data",
+   "label": "NVR / Recorder"
+  },
+  {
+   "depends_on": "eval:doc.point_type=='Camera'",
+   "fieldname": "nvr_channel",
+   "fieldtype": "Data",
+   "label": "NVR Channel"
+  },
+  {
+   "fieldname": "equipment",
+   "fieldtype": "Link",
+   "label": "Equipment Record",
+   "options": "IT Equipment"
+  },
+  {
+   "fieldname": "view_description",
+   "fieldtype": "Small Text",
+   "label": "Coverage / View Description"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "column_break_petc",
+   "fieldtype": "Column Break"
+  }
+ ],
  "links": [],
+ "modified": "2026-09-11 01:27:36.603239",
+ "modified_by": "Administrator",
  "module": "IT Operations",
  "name": "IT Monitoring Point",
  "naming_rule": "By fieldname",
+ "owner": "Administrator",
  "permissions": [
-  {"read":1,"role":"IT Operations User"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Supervisor"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Manager"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"System Manager"}
+  {
+   "read": 1,
+   "role": "IT Operations User"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "IT Operations Supervisor",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "IT Operations Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
  ],
+ "row_format": "Dynamic",
  "search_fields": "location,camera_identifier,ip_address",
  "sort_field": "point_name",
  "sort_order": "ASC",

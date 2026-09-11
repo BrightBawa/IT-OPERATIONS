@@ -1,0 +1,35 @@
+{
+ "app": "it_operations",
+ "bg_color": "blue",
+ "creation": "2026-09-11 00:00:00.000000",
+ "docstatus": 0,
+ "doctype": "Desktop Icon",
+ "hidden": 0,
+ "icon": "monitor-check",
+ "icon_type": "Link",
+ "idx": 0,
+ "label": "IT Operations",
+ "link_to": "IT Operations",
+ "link_type": "Workspace Sidebar",
+ "modified": "2026-09-11 00:00:00.000000",
+ "modified_by": "Administrator",
+ "name": "IT Operations",
+ "owner": "Administrator",
+ "restrict_removal": 0,
+ "roles": [
+  {
+   "role": "IT Operations User"
+  },
+  {
+   "role": "IT Operations Supervisor"
+  },
+  {
+   "role": "IT Operations Manager"
+  },
+  {
+   "role": "System Manager"
+  }
+ ],
+ "sidebar": "IT Operations",
+ "standard": 1
+}

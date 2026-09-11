@@ -1,4 +1,5 @@
 import frappe
+from frappe.modules.import_file import import_file_by_path
 
 
 ROLES = (
@@ -6,6 +7,9 @@ ROLES = (
 	"IT Operations Supervisor",
 	"IT Operations Manager",
 )
+
+APP_NAME = "it_operations"
+WORKSPACE_NAME = "it_operations"
 
 
 def ensure_roles():
@@ -15,14 +19,25 @@ def ensure_roles():
 
 
 def setup_workspace():
-	frappe.reload_doc("it_operations", "workspace", "it_operations")
+	frappe.reload_doc("it_operations", "workspace", WORKSPACE_NAME)
+	for folder_name in ("workspace_sidebar", "desktop_icon"):
+		import_file_by_path(
+			frappe.get_app_path(APP_NAME, folder_name, f"{WORKSPACE_NAME}.json"),
+			force=True,
+			ignore_version=True,
+		)
 	frappe.clear_cache()
 
 
 def after_install():
+	from it_operations.setup.block_c_cctv import seed
+	from it_operations.setup.responsibility_types import seed as seed_responsibility_types
+
 	ensure_roles()
 	frappe.db.set_single_value("IT Operations Settings", "enable_daily_generation", 1)
 	setup_workspace()
+	seed_responsibility_types()
+	seed()
 	frappe.db.commit()
 
 
