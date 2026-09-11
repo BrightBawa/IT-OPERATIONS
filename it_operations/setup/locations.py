@@ -12,6 +12,10 @@ CAMPUS_DEFINITIONS = (
 	(ABC_CAMPUS, "ABC", "ADEI BROTHERS CAMPUS", "Adei Brothers Campus."),
 )
 
+BLOCK_C_CLASSROOM_FLOORS = {
+	"B08F2": 8,
+}
+
 
 def seed():
 	"""Create campus roots and place the existing Block C hierarchy under SOC."""
@@ -23,10 +27,27 @@ def seed():
 		for name, code, branch, description in CAMPUS_DEFINITIONS
 	}
 	block_c = ensure_location("Block C", "BLOCK-C", "Block", parent_location=campuses["SOC"])
+	for floor_code, room_count in BLOCK_C_CLASSROOM_FLOORS.items():
+		ensure_classroom_floor(block_c, floor_code, room_count)
 	_normalize_block_c_labels(block_c)
 	rebuild_tree("IT Location")
 	_refresh_location_metadata()
 	return {"campuses": campuses, "block_c": block_c}
+
+
+def ensure_classroom_floor(block, floor_code, room_count):
+	"""Create a floor and its sequential CR01..CRnn room locations."""
+	floor = ensure_location(floor_code, floor_code, "Floor", parent_location=block)
+	rooms = [
+		ensure_location(
+			f"{floor_code}CR{room_number:02d}",
+			f"{floor_code}CR{room_number:02d}",
+			"Room",
+			parent_location=floor,
+		)
+		for room_number in range(1, room_count + 1)
+	]
+	return floor, rooms
 
 
 def ensure_location(

@@ -1,6 +1,8 @@
 import frappe
 from frappe.tests import IntegrationTestCase
 
+from it_operations.setup.locations import ensure_classroom_floor
+
 
 class IntegrationTestITLocation(IntegrationTestCase):
 	def test_campus_block_floor_room_hierarchy(self):
@@ -37,6 +39,30 @@ class IntegrationTestITLocation(IntegrationTestCase):
 		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
 		with self.assertRaises(frappe.ValidationError):
 			self._insert("Invalid Room", "Room", campus.name)
+
+	def test_ensure_classroom_floor_creates_sequential_room_codes(self):
+		suffix = frappe.generate_hash(length=8).upper()
+		branch = self._insert_branch(f"Test Branch {suffix}")
+		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
+		block = self._insert("Block C", "Block", campus.name)
+		floor_code = f"T{suffix}F2"
+
+		floor, rooms = ensure_classroom_floor(block.name, floor_code, 8)
+		second_floor, second_rooms = ensure_classroom_floor(block.name, floor_code, 8)
+
+		self.assertEqual(frappe.db.get_value("IT Location", floor, "location_type"), "Floor")
+		self.assertEqual(len(rooms), 8)
+		self.assertEqual(second_floor, floor)
+		self.assertEqual(second_rooms, rooms)
+		self.assertEqual(
+			frappe.get_all(
+				"IT Location",
+				filters={"parent_location": floor},
+				pluck="location_code",
+				order_by="location_code asc",
+			),
+			[f"{floor_code}CR{room_number:02d}" for room_number in range(1, 9)],
+		)
 
 	def _insert(self, location_name, location_type, parent_location=None, campus=None):
 		return frappe.get_doc(
