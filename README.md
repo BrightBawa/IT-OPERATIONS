@@ -28,6 +28,7 @@ The initial Block C inventory reuses the general IT Operations model instead of 
 
 - `IT Location` stores Block C beneath SOC Campus and preserves the room codes parsed from the supplied channel names.
 - Block C includes second floor `B08F2` with classrooms `B08F2CR01` through `B08F2CR08`.
+- Room locations have an editable **Assigned Class** field. The supplied classroom channels populate this field from the class prefix (for example, `10C2-B08F1CR06` assigns `10C2` to room `B08F1CR06`). Corridor channels such as `24CR-0C` and `24CR-1C` are assigned to their corresponding floor and do not receive a class.
 - `IT Equipment` stores each of the 23 cameras and 2 NVRs, including camera serial numbers.
 - `IT Monitoring Point` stores the device name, model, IP address, channel, and physical location. IP values are operational metadata and can be updated without changing the equipment identity.
 - `IT Responsibility Type` provides selectable duties. **Block IT Equipment Inspection** is the umbrella daily responsibility for CCTV/NVRs, televisions/displays, and wireless access points in one assigned block.

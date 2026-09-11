@@ -39,6 +39,12 @@ CAMERAS = (
 	("10.143.150.15", "DS-2CD1143G0-IUF", "J62513754", "B05F0-AR06 (1-011)", "11S1-B08F0CR06 (1-011)"),
 )
 
+CLASSROOM_CHANNEL_PATTERN = re.compile(
+	r"^(?P<assigned_class>\d{2}[A-Z]\d+)-(?P<room_code>B\d+F\d+CR\d+)"
+)
+ROOM_CODE_PATTERN = re.compile(r"(B\d+F\d+CR\d+)")
+CORRIDOR_CHANNEL_PATTERN = re.compile(r"^24CR-(?P<floor>\d+)C-")
+
 
 def seed():
 	"""Create the initial Block C CCTV inventory and reusable daily checklist."""
@@ -59,6 +65,11 @@ def seed():
 
 	for ip_address, model, serial_number, device_name, channel_name in CAMERAS:
 		location = _camera_location(block, channel_name)
+		assigned_class = _assigned_class(channel_name)
+		if assigned_class:
+			frappe.db.set_value(
+				"IT Location", location, "assigned_class", assigned_class, update_modified=False
+			)
 		point, equipment = _ensure_device(
 			device_name=device_name,
 			device_type="CCTV Camera",
@@ -76,13 +87,31 @@ def seed():
 
 
 def _camera_location(block, channel_name):
-	room_match = re.search(r"(B\d+F\d+CR\d+)", channel_name)
-	if not room_match:
+	location_type, location_code = _channel_location(channel_name)
+	if not location_code:
 		return block
-	room_code = room_match.group(1)
+	if location_type == "Floor":
+		return ensure_location(location_code, location_code, "Floor", block)
+
+	room_code = location_code
 	floor_code = re.match(r"(B\d+F\d+)", room_code).group(1)
 	floor = ensure_location(floor_code, floor_code, "Floor", block)
 	return ensure_location(room_code, room_code, "Room", floor)
+
+
+def _channel_location(channel_name):
+	room_match = ROOM_CODE_PATTERN.search(channel_name)
+	if room_match:
+		return "Room", room_match.group(1)
+	corridor_match = CORRIDOR_CHANNEL_PATTERN.match(channel_name)
+	if corridor_match:
+		return "Floor", f"B08F{corridor_match.group('floor')}"
+	return None, None
+
+
+def _assigned_class(channel_name):
+	match = CLASSROOM_CHANNEL_PATTERN.match(channel_name)
+	return match.group("assigned_class") if match else None
 
 
 def _ensure_device(
@@ -109,6 +138,8 @@ def _ensure_device(
 				"notes": _device_notes(ip_address, model, channel_name),
 			}
 		).insert(ignore_permissions=True).name
+	elif frappe.db.get_value("IT Equipment", equipment, "location") != location:
+		frappe.db.set_value("IT Equipment", equipment, "location", location, update_modified=False)
 
 	legacy_point_name = f"Block C - {device_name}"
 	point_name = device_name if device_type == "Network Video Recorder" else legacy_point_name
@@ -131,6 +162,8 @@ def _ensure_device(
 				"view_description": f"Block C CCTV view: {channel_name}" if channel_name else "Block C recorder",
 			}
 		).insert(ignore_permissions=True).name
+	elif frappe.db.get_value("IT Monitoring Point", point, "location") != location:
+		frappe.db.set_value("IT Monitoring Point", point, "location", location, update_modified=False)
 
 	if not frappe.db.get_value("IT Equipment", equipment, "monitoring_point"):
 		frappe.db.set_value("IT Equipment", equipment, "monitoring_point", point, update_modified=False)

@@ -25,8 +25,11 @@ class ITLocation(NestedSet):
 	def validate(self):
 		self.location_name = (self.location_name or "").strip()
 		self.location_code = (self.location_code or "").strip() or None
+		self.assigned_class = (self.assigned_class or "").strip() or None
 		if "/" in self.location_name:
 			frappe.throw(_("Location Name cannot contain a forward slash (/)."))
+		if self.assigned_class and self.location_type != "Room":
+			frappe.throw(_("Assigned Class can only be set for a Room location."))
 
 		if self.location_type == "Campus":
 			if self.parent_location:

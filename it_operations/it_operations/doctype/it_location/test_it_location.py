@@ -11,7 +11,7 @@ class IntegrationTestITLocation(IntegrationTestCase):
 		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
 		block = self._insert("Block A", "Block", campus.name)
 		floor = self._insert("F1", "Floor", block.name)
-		room = self._insert("B01F1CR01", "Room", floor.name)
+		room = self._insert("B01F1CR01", "Room", floor.name, assigned_class=" 10C2 ")
 
 		self.assertEqual(block.campus, branch.name)
 		self.assertEqual(room.campus, branch.name)
@@ -20,6 +20,7 @@ class IntegrationTestITLocation(IntegrationTestCase):
 			f"{campus.location_name} / Block A / F1 / B01F1CR01",
 		)
 		self.assertEqual(room.is_group, 0)
+		self.assertEqual(room.assigned_class, "10C2")
 		campus.reload()
 		self.assertGreater(campus.rgt, room.rgt)
 		self.assertLess(campus.lft, room.lft)
@@ -37,8 +38,11 @@ class IntegrationTestITLocation(IntegrationTestCase):
 		suffix = frappe.generate_hash(length=8)
 		branch = self._insert_branch(f"Test Branch {suffix}")
 		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
+		block = self._insert("Block A", "Block", campus.name)
 		with self.assertRaises(frappe.ValidationError):
 			self._insert("Invalid Room", "Room", campus.name)
+		with self.assertRaises(frappe.ValidationError):
+			self._insert("Invalid Assigned Class", "Floor", block.name, assigned_class="10C2")
 
 	def test_ensure_classroom_floor_creates_sequential_room_codes(self):
 		suffix = frappe.generate_hash(length=8).upper()
@@ -64,7 +68,9 @@ class IntegrationTestITLocation(IntegrationTestCase):
 			[f"{floor_code}CR{room_number:02d}" for room_number in range(1, 9)],
 		)
 
-	def _insert(self, location_name, location_type, parent_location=None, campus=None):
+	def _insert(
+		self, location_name, location_type, parent_location=None, campus=None, assigned_class=None
+	):
 		return frappe.get_doc(
 			{
 				"doctype": "IT Location",
@@ -72,6 +78,7 @@ class IntegrationTestITLocation(IntegrationTestCase):
 				"location_type": location_type,
 				"parent_location": parent_location,
 				"campus": campus,
+				"assigned_class": assigned_class,
 				"is_active": 1,
 			}
 		).insert(ignore_permissions=True)
