@@ -31,12 +31,14 @@ def setup_workspace():
 
 def after_install():
 	from it_operations.setup.block_c_cctv import seed
+	from it_operations.setup.locations import seed as seed_locations
 	from it_operations.setup.responsibility_types import seed as seed_responsibility_types
 
 	ensure_roles()
 	frappe.db.set_single_value("IT Operations Settings", "enable_daily_generation", 1)
 	setup_workspace()
 	seed_responsibility_types()
+	seed_locations()
 	seed()
 	frappe.db.commit()
 

@@ -2,8 +2,9 @@ import re
 
 import frappe
 
+from it_operations.setup.locations import ensure_location, seed as seed_locations
 
-BLOCK_LOCATION = "Block C"
+
 TEMPLATE_NAME = "Block C IT Equipment Daily Inspection"
 RESPONSIBILITY_TYPE = "Block IT Equipment Inspection"
 
@@ -41,7 +42,7 @@ CAMERAS = (
 
 def seed():
 	"""Create the initial Block C CCTV inventory and reusable daily checklist."""
-	block = _ensure_location(BLOCK_LOCATION, "BLOCK-C", "Block")
+	block = seed_locations()["block_c"]
 	template = _get_or_create_template()
 	template_changed = template.is_new()
 
@@ -74,30 +75,14 @@ def seed():
 	return template.name
 
 
-def _ensure_location(location_name, location_code, location_type, parent_location=None):
-	existing = frappe.db.get_value("IT Location", {"location_code": location_code}, "name")
-	if existing:
-		return existing
-	return frappe.get_doc(
-		{
-			"doctype": "IT Location",
-			"location_name": location_name,
-			"location_code": location_code,
-			"location_type": location_type,
-			"parent_location": parent_location,
-			"is_active": 1,
-		}
-	).insert(ignore_permissions=True).name
-
-
 def _camera_location(block, channel_name):
 	room_match = re.search(r"(B\d+F\d+CR\d+)", channel_name)
 	if not room_match:
 		return block
 	room_code = room_match.group(1)
 	floor_code = re.match(r"(B\d+F\d+)", room_code).group(1)
-	floor = _ensure_location(f"Block C - {floor_code}", floor_code, "Floor", block)
-	return _ensure_location(f"Block C - {room_code}", room_code, "Room", floor)
+	floor = ensure_location(floor_code, floor_code, "Floor", block)
+	return ensure_location(room_code, room_code, "Room", floor)
 
 
 def _ensure_device(

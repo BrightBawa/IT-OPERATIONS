@@ -5,7 +5,7 @@ A standalone Frappe app for routine IT checks, CCTV monitoring, operational acti
 ## Initial setup
 
 1. Assign `IT Operations User`, `IT Operations Supervisor`, and `IT Operations Manager` roles as appropriate.
-2. Create IT Locations and Monitoring Points. Locations are records, so campuses, blocks, buildings, and rooms are never hard-coded.
+2. Build IT Locations in the tree: Campus → Block/Building → Floor → Room/Outdoor Area. Every non-campus location must belong to a campus hierarchy.
 3. Select or create a Responsibility Type, then create Checklist Templates and their mandatory/optional items.
 4. Create Responsibility Assignments linking an active Employee, location, responsibility type, supervisor, and template.
 5. Leave **Enable Daily Generation** selected in IT Operations Settings.
@@ -16,11 +16,17 @@ Access is enforced by server hooks: users see their own logs, supervisors see th
 
 The **IT Operations** Desk icon opens the standard IT Operations workspace. Its workspace, sidebar, and desktop-icon definitions are shipped with the app and resynchronized after every migration so the Home link cannot point to a missing workspace.
 
+## Location hierarchy
+
+**IT Location** opens in Tree view and starts with the SOC, PAC, and ABC campus roots. SOC represents the Sam Okudzeto Campus at Sota, while PAC represents Pomaa-Adeiso Campus. Blocks and buildings sit below a campus; floors sit below a block or building; rooms and outdoor areas are leaf locations.
+
+Room labels retain their supplied room codes. A separate read-only path identifies the context, for example **SOC Campus / Block C / B08F0 / B08F0CR01**. Human-readable names and codes need only be unique among siblings, so different campuses can each have a Block A or Building 01.
+
 ## Block C IT equipment checklist
 
 The initial Block C inventory reuses the general IT Operations model instead of adding a parallel CCTV subsystem:
 
-- `IT Location` stores Block C and the room codes parsed from the supplied channel names.
+- `IT Location` stores Block C beneath SOC Campus and preserves the room codes parsed from the supplied channel names.
 - `IT Equipment` stores each of the 23 cameras and 2 NVRs, including camera serial numbers.
 - `IT Monitoring Point` stores the device name, model, IP address, channel, and physical location. IP values are operational metadata and can be updated without changing the equipment identity.
 - `IT Responsibility Type` provides selectable duties. **Block IT Equipment Inspection** is the umbrella daily responsibility for CCTV/NVRs, televisions/displays, and wireless access points in one assigned block.

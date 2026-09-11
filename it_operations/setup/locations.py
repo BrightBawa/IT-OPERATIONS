@@ -1,0 +1,123 @@
+import frappe
+from frappe.utils.nestedset import rebuild_tree
+
+
+SOC_CAMPUS = "SOC Campus"
+PAC_CAMPUS = "PAC Campus"
+ABC_CAMPUS = "ABC Campus"
+
+CAMPUS_DEFINITIONS = (
+	(SOC_CAMPUS, "SOC", "Sam Okudzeto Campus at Sota."),
+	(PAC_CAMPUS, "PAC", "Pomaa-Adeiso Campus."),
+	(ABC_CAMPUS, "ABC", "ABC Campus."),
+)
+
+
+def seed():
+	"""Create campus roots and place the existing Block C hierarchy under SOC."""
+	if frappe.db.has_column("IT Location", "lft"):
+		rebuild_tree("IT Location")
+
+	campuses = {
+		code: ensure_location(name, code, "Campus", description=description)
+		for name, code, description in CAMPUS_DEFINITIONS
+	}
+	block_c = ensure_location("Block C", "BLOCK-C", "Block", parent_location=campuses["SOC"])
+	_normalize_block_c_labels(block_c)
+	rebuild_tree("IT Location")
+	_refresh_location_metadata()
+	return {"campuses": campuses, "block_c": block_c}
+
+
+def ensure_location(
+	location_name,
+	location_code,
+	location_type,
+	parent_location=None,
+	description=None,
+):
+	filters = {"location_code": location_code, "parent_location": parent_location or ("is", "not set")}
+	existing = frappe.db.get_value("IT Location", filters, "name")
+	if not existing and location_code == "BLOCK-C":
+		existing = frappe.db.get_value("IT Location", {"location_code": location_code}, "name")
+
+	if existing:
+		doc = frappe.get_doc("IT Location", existing)
+		doc.location_name = location_name
+		doc.location_type = location_type
+		doc.parent_location = parent_location
+		doc.is_active = 1
+		if description:
+			doc.description = description
+		doc.save(ignore_permissions=True)
+		return doc.name
+
+	return frappe.get_doc(
+		{
+			"doctype": "IT Location",
+			"location_name": location_name,
+			"location_code": location_code,
+			"location_type": location_type,
+			"parent_location": parent_location,
+			"is_active": 1,
+			"description": description,
+		}
+	).insert(ignore_permissions=True).name
+
+
+def _normalize_block_c_labels(block_c):
+	locations = frappe.get_all(
+		"IT Location",
+		filters={"name": ("like", "Block C - %")},
+		fields=["name", "location_code", "location_type"],
+	)
+	for location in locations:
+		if location.location_type in {"Floor", "Room"} and location.location_code:
+			frappe.db.set_value(
+				"IT Location",
+				location.name,
+				{
+					"location_name": location.location_code,
+					"is_group": 1 if location.location_type == "Floor" else 0,
+				},
+				update_modified=False,
+			)
+
+	frappe.db.set_value("IT Location", block_c, "is_group", 1, update_modified=False)
+
+
+def _refresh_location_metadata():
+	roots = frappe.get_all(
+		"IT Location",
+		filters={"parent_location": ("is", "not set")},
+		fields=["name", "location_name", "location_type"],
+		order_by="lft asc",
+	)
+	for root in roots:
+		campus = root.name if root.location_type == "Campus" else None
+		frappe.db.set_value(
+			"IT Location",
+			root.name,
+			{"campus": campus, "full_location_path": root.location_name},
+			update_modified=False,
+		)
+		_refresh_children(root.name, campus, root.location_name)
+
+
+def _refresh_children(parent, campus, parent_path):
+	children = frappe.get_all(
+		"IT Location",
+		filters={"parent_location": parent},
+		fields=["name", "location_name", "location_type"],
+		order_by="lft asc",
+	)
+	for child in children:
+		child_campus = child.name if child.location_type == "Campus" else campus
+		path = f"{parent_path} / {child.location_name}"
+		frappe.db.set_value(
+			"IT Location",
+			child.name,
+			{"campus": child_campus, "full_location_path": path},
+			update_modified=False,
+		)
+		_refresh_children(child.name, child_campus, path)
