@@ -7,9 +7,9 @@ PAC_CAMPUS = "PAC Campus"
 ABC_CAMPUS = "ABC Campus"
 
 CAMPUS_DEFINITIONS = (
-	(SOC_CAMPUS, "SOC", "Sam Okudzeto Campus at Sota."),
-	(PAC_CAMPUS, "PAC", "Pomaa-Adeiso Campus."),
-	(ABC_CAMPUS, "ABC", "ABC Campus."),
+	(SOC_CAMPUS, "SOC", "SOC CAMPUS", "Sam Okudzeto Campus at Sota."),
+	(PAC_CAMPUS, "PAC", "POMAA ADEISO CAMPUS", "Pomaa-Adeiso Campus."),
+	(ABC_CAMPUS, "ABC", "ADEI BROTHERS CAMPUS", "Adei Brothers Campus."),
 )
 
 
@@ -19,8 +19,8 @@ def seed():
 		rebuild_tree("IT Location")
 
 	campuses = {
-		code: ensure_location(name, code, "Campus", description=description)
-		for name, code, description in CAMPUS_DEFINITIONS
+		code: ensure_location(name, code, "Campus", campus=branch, description=description)
+		for name, code, branch, description in CAMPUS_DEFINITIONS
 	}
 	block_c = ensure_location("Block C", "BLOCK-C", "Block", parent_location=campuses["SOC"])
 	_normalize_block_c_labels(block_c)
@@ -34,6 +34,7 @@ def ensure_location(
 	location_code,
 	location_type,
 	parent_location=None,
+	campus=None,
 	description=None,
 ):
 	filters = {"location_code": location_code, "parent_location": parent_location or ("is", "not set")}
@@ -46,6 +47,8 @@ def ensure_location(
 		doc.location_name = location_name
 		doc.location_type = location_type
 		doc.parent_location = parent_location
+		if location_type == "Campus":
+			doc.campus = campus
 		doc.is_active = 1
 		if description:
 			doc.description = description
@@ -59,6 +62,7 @@ def ensure_location(
 			"location_code": location_code,
 			"location_type": location_type,
 			"parent_location": parent_location,
+			"campus": campus,
 			"is_active": 1,
 			"description": description,
 		}
@@ -94,7 +98,7 @@ def _refresh_location_metadata():
 		order_by="lft asc",
 	)
 	for root in roots:
-		campus = root.name if root.location_type == "Campus" else None
+		campus = frappe.db.get_value("IT Location", root.name, "campus")
 		frappe.db.set_value(
 			"IT Location",
 			root.name,
@@ -112,7 +116,7 @@ def _refresh_children(parent, campus, parent_path):
 		order_by="lft asc",
 	)
 	for child in children:
-		child_campus = child.name if child.location_type == "Campus" else campus
+		child_campus = campus
 		path = f"{parent_path} / {child.location_name}"
 		frappe.db.set_value(
 			"IT Location",

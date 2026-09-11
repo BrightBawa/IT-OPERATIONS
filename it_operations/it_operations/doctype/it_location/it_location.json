@@ -26,7 +26,7 @@
   {"fieldname":"location_type","fieldtype":"Select","in_list_view":1,"in_standard_filter":1,"label":"Location Type","options":"Campus\nBlock\nBuilding\nFloor\nRoom\nOutdoor Area\nOther","reqd":1},
   {"fieldname":"parent_location","fieldtype":"Link","ignore_user_permissions":1,"in_list_view":1,"label":"Parent Location","options":"IT Location"},
   {"fieldname":"column_break_status","fieldtype":"Column Break"},
-  {"fieldname":"campus","fieldtype":"Link","ignore_user_permissions":1,"in_standard_filter":1,"label":"Campus","options":"IT Location","read_only":1},
+  {"fieldname":"campus","fieldtype":"Link","ignore_user_permissions":1,"in_standard_filter":1,"label":"Campus / Branch","mandatory_depends_on":"eval:doc.location_type=='Campus'","options":"Branch","read_only_depends_on":"eval:doc.location_type!='Campus'"},
   {"bold":1,"default":"0","fieldname":"is_group","fieldtype":"Check","in_list_view":1,"label":"Can Contain Locations","read_only":1},
   {"default":"1","fieldname":"is_active","fieldtype":"Check","in_list_view":1,"label":"Active"},
   {"fieldname":"full_location_path","fieldtype":"Data","in_list_view":1,"label":"Full Location Path","read_only":1},

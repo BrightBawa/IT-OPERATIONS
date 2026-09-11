@@ -39,11 +39,18 @@ class IntegrationTestITDailyOperationsLog(IntegrationTestCase):
 		}[self._testMethodName]
 		self.test_date = getdate(add_days("2098-01-01", test_day))
 		self.suffix = frappe.generate_hash(length=8)
+		self.branch = frappe.get_doc(
+			{
+				"doctype": "Branch",
+				"branch": f"Test IT Branch {self.suffix}",
+			}
+		).insert(ignore_permissions=True)
 		self.campus = frappe.get_doc(
 			{
 				"doctype": "IT Location",
 				"location_name": f"Test Campus {self.suffix}",
 				"location_type": "Campus",
+				"campus": self.branch.name,
 				"is_active": 1,
 			}
 		).insert(ignore_permissions=True)

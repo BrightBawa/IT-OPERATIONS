@@ -18,7 +18,7 @@ The **IT Operations** Desk icon opens the standard IT Operations workspace. Its 
 
 ## Location hierarchy
 
-**IT Location** opens in Tree view and starts with the SOC, PAC, and ABC campus roots. SOC represents the Sam Okudzeto Campus at Sota, while PAC represents Pomaa-Adeiso Campus. Blocks and buildings sit below a campus; floors sit below a block or building; rooms and outdoor areas are leaf locations.
+**IT Location** opens in Tree view and starts with the SOC, PAC, and ABC campus roots. Each campus root links to its ERPNext `Branch`: SOC CAMPUS, POMAA ADEISO CAMPUS, or ADEI BROTHERS CAMPUS. Blocks and buildings inherit that Branch from the campus; floors sit below a block or building; rooms and outdoor areas are leaf locations.
 
 Room labels retain their supplied room codes. A separate read-only path identifies the context, for example **SOC Campus / Block C / B08F0 / B08F0CR01**. Human-readable names and codes need only be unique among siblings, so different campuses can each have a Block A or Building 01.
 

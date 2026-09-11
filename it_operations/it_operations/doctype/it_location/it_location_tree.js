@@ -25,6 +25,14 @@ frappe.treeview_settings["IT Location"] = {
 			reqd: 1,
 		},
 		{
+			depends_on: "eval:doc.location_type=='Campus'",
+			fieldname: "campus",
+			fieldtype: "Link",
+			label: __("Campus / Branch"),
+			mandatory_depends_on: "eval:doc.location_type=='Campus'",
+			options: "Branch",
+		},
+		{
 			fieldname: "is_group",
 			fieldtype: "Check",
 			label: __("Can Contain Locations"),

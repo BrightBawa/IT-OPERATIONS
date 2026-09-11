@@ -31,9 +31,11 @@ class ITLocation(NestedSet):
 		if self.location_type == "Campus":
 			if self.parent_location:
 				frappe.throw(_("A Campus must be a top-level location."))
+			if not self.campus:
+				frappe.throw(_("Select the Branch represented by this Campus."))
 			self.is_group = 1
-			self.campus = self.name if not self.is_new() else None
 			self.full_location_path = self.location_name
+			self._validate_unique_campus_branch()
 		else:
 			self._set_parent_details()
 
@@ -43,11 +45,6 @@ class ITLocation(NestedSet):
 			self.is_group = 0
 
 		self._validate_sibling_uniqueness()
-
-	def after_insert(self):
-		if self.location_type == "Campus" and not self.campus:
-			self.db_set("campus", self.name, update_modified=False)
-			self.campus = self.name
 
 	def on_update(self):
 		super().on_update()
@@ -71,7 +68,7 @@ class ITLocation(NestedSet):
 			frappe.throw(
 				_("A {0} cannot be placed under a {1}.").format(self.location_type, parent.location_type)
 			)
-		self.campus = self.parent_location if parent.location_type == "Campus" else parent.campus
+		self.campus = parent.campus
 		if not self.campus:
 			frappe.throw(_("The selected parent is not tied to a Campus."))
 		parent_path = parent.full_location_path or parent.location_name
@@ -91,8 +88,17 @@ class ITLocation(NestedSet):
 			if existing and existing != self.name:
 				frappe.throw(_("Location codes must be unique within the same parent."))
 
+	def _validate_unique_campus_branch(self):
+		existing = frappe.db.get_value(
+			"IT Location",
+			{"location_type": "Campus", "campus": self.campus},
+			"name",
+		)
+		if existing and existing != self.name:
+			frappe.throw(_("Branch {0} already has a Campus location.").format(self.campus))
+
 	def _refresh_descendant_metadata(self):
-		campus = self.name if self.location_type == "Campus" else self.campus
+		campus = self.campus
 		for child in frappe.get_all("IT Location", filters={"parent_location": self.name}, pluck="name"):
 			child_doc = frappe.get_doc("IT Location", child)
 			path = f"{self.full_location_path} / {child_doc.location_name}"
