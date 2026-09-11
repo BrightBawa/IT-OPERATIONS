@@ -25,7 +25,7 @@
   {"fieldname":"location_name","fieldtype":"Data","in_list_view":1,"label":"Location Name / Room Code","reqd":1},
   {"fieldname":"location_code","fieldtype":"Data","in_list_view":1,"label":"Location Code"},
   {"fieldname":"location_type","fieldtype":"Select","in_list_view":1,"in_standard_filter":1,"label":"Location Type","options":"Campus\nBlock\nBuilding\nFloor\nRoom\nOutdoor Area\nOther","reqd":1},
-  {"depends_on":"eval:doc.location_type=='Room'","description":"Current class assigned to this room, for example 10C1 or 11S5.","fieldname":"assigned_class","fieldtype":"Data","in_list_view":1,"in_standard_filter":1,"label":"Assigned Class"},
+  {"depends_on":"eval:doc.location_type=='Room'","description":"Select the current class assigned to this room from the Student Batch Name list.","fieldname":"assigned_class","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"Assigned Class","options":"Student Batch Name"},
   {"fieldname":"parent_location","fieldtype":"Link","ignore_user_permissions":1,"in_list_view":1,"label":"Parent Location","options":"IT Location"},
   {"fieldname":"column_break_status","fieldtype":"Column Break"},
   {"fieldname":"campus","fieldtype":"Link","ignore_user_permissions":1,"in_standard_filter":1,"label":"Campus / Branch","mandatory_depends_on":"eval:doc.location_type=='Campus'","options":"Branch","read_only_depends_on":"eval:doc.location_type!='Campus'"},

@@ -4,14 +4,18 @@ from frappe.tests import IntegrationTestCase
 from it_operations.setup.locations import ensure_classroom_floor
 
 
+IGNORE_TEST_RECORD_DEPENDENCIES = ["Student Batch Name"]
+
+
 class IntegrationTestITLocation(IntegrationTestCase):
 	def test_campus_block_floor_room_hierarchy(self):
 		suffix = frappe.generate_hash(length=8)
+		student_batch = self._insert_student_batch(f"Test Batch {suffix}")
 		branch = self._insert_branch(f"Test Branch {suffix}")
 		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
 		block = self._insert("Block A", "Block", campus.name)
 		floor = self._insert("F1", "Floor", block.name)
-		room = self._insert("B01F1CR01", "Room", floor.name, assigned_class=" 10C2 ")
+		room = self._insert("B01F1CR01", "Room", floor.name, assigned_class=student_batch.name)
 
 		self.assertEqual(block.campus, branch.name)
 		self.assertEqual(room.campus, branch.name)
@@ -20,7 +24,7 @@ class IntegrationTestITLocation(IntegrationTestCase):
 			f"{campus.location_name} / Block A / F1 / B01F1CR01",
 		)
 		self.assertEqual(room.is_group, 0)
-		self.assertEqual(room.assigned_class, "10C2")
+		self.assertEqual(room.assigned_class, student_batch.name)
 		campus.reload()
 		self.assertGreater(campus.rgt, room.rgt)
 		self.assertLess(campus.lft, room.lft)
@@ -36,13 +40,16 @@ class IntegrationTestITLocation(IntegrationTestCase):
 			self._insert("Orphan Block", "Block")
 
 		suffix = frappe.generate_hash(length=8)
+		student_batch = self._insert_student_batch(f"Test Batch {suffix}")
 		branch = self._insert_branch(f"Test Branch {suffix}")
 		campus = self._insert(f"Test Campus {suffix}", "Campus", campus=branch.name)
 		block = self._insert("Block A", "Block", campus.name)
 		with self.assertRaises(frappe.ValidationError):
 			self._insert("Invalid Room", "Room", campus.name)
 		with self.assertRaises(frappe.ValidationError):
-			self._insert("Invalid Assigned Class", "Floor", block.name, assigned_class="10C2")
+			self._insert(
+				"Invalid Assigned Class", "Floor", block.name, assigned_class=student_batch.name
+			)
 
 	def test_ensure_classroom_floor_creates_sequential_room_codes(self):
 		suffix = frappe.generate_hash(length=8).upper()
@@ -85,3 +92,8 @@ class IntegrationTestITLocation(IntegrationTestCase):
 
 	def _insert_branch(self, branch_name):
 		return frappe.get_doc({"doctype": "Branch", "branch": branch_name}).insert(ignore_permissions=True)
+
+	def _insert_student_batch(self, batch_name):
+		return frappe.get_doc(
+			{"doctype": "Student Batch Name", "batch_name": batch_name}
+		).insert(ignore_permissions=True)

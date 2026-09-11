@@ -8,5 +8,6 @@ it_operations.patches.build_location_tree
 it_operations.patches.link_location_campus_to_branch
 it_operations.patches.add_block_c_second_floor
 it_operations.patches.assign_block_c_room_classes
+it_operations.patches.link_room_classes_to_student_batches
 it_operations.patches.create_responsibility_types
 it_operations.patches.seed_block_c_cctv

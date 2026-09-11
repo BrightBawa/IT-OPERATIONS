@@ -67,9 +67,7 @@ def seed():
 		location = _camera_location(block, channel_name)
 		assigned_class = _assigned_class(channel_name)
 		if assigned_class:
-			frappe.db.set_value(
-				"IT Location", location, "assigned_class", assigned_class, update_modified=False
-			)
+			_set_assigned_class(location, assigned_class)
 		point, equipment = _ensure_device(
 			device_name=device_name,
 			device_type="CCTV Camera",
@@ -112,6 +110,14 @@ def _channel_location(channel_name):
 def _assigned_class(channel_name):
 	match = CLASSROOM_CHANNEL_PATTERN.match(channel_name)
 	return match.group("assigned_class") if match else None
+
+
+def _set_assigned_class(location, student_batch):
+	if not frappe.db.exists("Student Batch Name", student_batch):
+		frappe.throw(
+			f"Cannot assign room {location}: Student Batch Name {student_batch} does not exist."
+		)
+	frappe.db.set_value("IT Location", location, "assigned_class", student_batch, update_modified=False)
 
 
 def _ensure_device(
