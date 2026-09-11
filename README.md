@@ -34,6 +34,10 @@ The initial Block C inventory reuses the general IT Operations model instead of 
 - `IT Responsibility Type` provides selectable duties. **Block IT Equipment Inspection** is the umbrella daily responsibility for CCTV/NVRs, televisions/displays, and wireless access points in one assigned block.
 - `IT Checklist Template` stores one reusable **Block C IT Equipment Daily Inspection** list. It currently has the 25 supplied CCTV/NVR devices; televisions and access points can be appended when their inventories are supplied.
 - `IT Responsibility Assignment` links that template and Block C to the technician chosen by the IT Manager.
+
+## Controlled Block A equipment import
+
+`it_operations.importers.block_a_devices.import_block_a_devices` contains the isolated, idempotent importer for the supplied 55-device SOC Block A inventory. It defaults to a zero-write dry run; pass `dry_run=False` for the controlled import. It creates only the missing Block A location and IT Equipment records, never imports credentials, and skips existing equipment by serial number, MAC address, or IP address and location.
 - `IT Daily Operations Log` snapshots the identifying details and records Online, Working, Alignment, Recording, Playback, Overall, and Remarks for each device every day.
 
 The Overall result is calculated on the server. Each equipment type asks only for applicable checks: cameras use online, working, alignment, recording, and playback; NVRs omit alignment; televisions use working, alignment, and playback; access points use online and working. Every applicable check must be completed; any failed value produces a Fault and requires remarks. A per-row **Mark Device OK** action and a confirmation-protected **Mark All Block Equipment OK** action speed up normal inspections without silently recording work. NVR remarks can record storage or hard-drive failures. No CCTV credentials are stored.
