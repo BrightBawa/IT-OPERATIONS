@@ -43,7 +43,8 @@
   {"cancel":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"submit":1,"write":1,"role":"IT Operations Manager"},
   {"cancel":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"submit":1,"write":1,"role":"System Manager"}
  ],
- "search_fields": "employee_name,operation_date,status",
+ "search_fields": "employee,employee_name,operation_date,supervisor,status",
+ "show_title_field_in_link": 1,
  "sort_field": "operation_date",
  "sort_order": "DESC",
  "states": [],

@@ -8,7 +8,7 @@
  "fields": [
   {"fieldname":"template_name","fieldtype":"Data","in_list_view":1,"label":"Template Name","reqd":1,"unique":1},
   {"fieldname":"responsibility_type","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"Responsibility Type","options":"IT Responsibility Type","reqd":1},
-  {"default":"1","fieldname":"is_active","fieldtype":"Check","in_list_view":1,"label":"Active"},
+  {"default":"1","fieldname":"is_active","fieldtype":"Check","in_list_view":1,"in_standard_filter":1,"label":"Active"},
   {"fieldname":"description","fieldtype":"Small Text","label":"Description"},
   {"fieldname":"items_section","fieldtype":"Section Break","label":"Checklist Items"},
   {"fieldname":"items","fieldtype":"Table","label":"Items","options":"IT Checklist Template Item","reqd":1}
@@ -24,7 +24,10 @@
   {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Manager"},
   {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"System Manager"}
  ],
+ "search_fields": "template_name,responsibility_type,description",
+ "show_title_field_in_link": 1,
  "sort_field": "template_name",
  "sort_order": "ASC",
- "states": []
+ "states": [],
+ "title_field": "template_name"
 }

@@ -3,7 +3,6 @@ from frappe.tests import IntegrationTestCase
 
 from it_operations.setup.locations import ensure_classroom_floor, ensure_location
 
-
 IGNORE_TEST_RECORD_DEPENDENCIES = ["Location", "Student Batch Name"]
 
 
@@ -12,15 +11,9 @@ class IntegrationTestAssetLocation(IntegrationTestCase):
 		suffix = frappe.generate_hash(length=8).upper()
 		student_batch = self._insert_student_batch(f"Test Batch {suffix}")
 		branch = self._insert_branch(f"Test Branch {suffix}")
-		campus = ensure_location(
-			f"Test Campus {suffix}", f"TC-{suffix}", "Campus", campus=branch.name
-		)
-		block = ensure_location(
-			f"Test Block {suffix}", f"TB-{suffix}", "Block", parent_location=campus
-		)
-		floor = ensure_location(
-			f"Test Floor {suffix}", f"TF-{suffix}", "Floor", parent_location=block
-		)
+		campus = ensure_location(f"Test Campus {suffix}", f"TC-{suffix}", "Campus", campus=branch.name)
+		block = ensure_location(f"Test Block {suffix}", f"TB-{suffix}", "Block", parent_location=campus)
+		floor = ensure_location(f"Test Floor {suffix}", f"TF-{suffix}", "Floor", parent_location=block)
 		room = ensure_location(
 			f"Test Room {suffix}",
 			f"TR-{suffix}",
@@ -41,12 +34,8 @@ class IntegrationTestAssetLocation(IntegrationTestCase):
 
 	def test_existing_location_cannot_be_silently_moved(self):
 		suffix = frappe.generate_hash(length=8).upper()
-		first_parent = ensure_location(
-			f"First Parent {suffix}", f"FP-{suffix}", "Campus"
-		)
-		second_parent = ensure_location(
-			f"Second Parent {suffix}", f"SP-{suffix}", "Campus"
-		)
+		first_parent = ensure_location(f"First Parent {suffix}", f"FP-{suffix}", "Campus")
+		second_parent = ensure_location(f"Second Parent {suffix}", f"SP-{suffix}", "Campus")
 		child_name = f"Test Child {suffix}"
 		ensure_location(child_name, f"TC-{suffix}", "Block", parent_location=first_parent)
 
@@ -56,17 +45,13 @@ class IntegrationTestAssetLocation(IntegrationTestCase):
 	def test_ensure_classroom_floor_creates_sequential_room_codes(self):
 		suffix = frappe.generate_hash(length=8).upper()
 		campus = ensure_location(f"Test Campus {suffix}", f"TC-{suffix}", "Campus")
-		block = ensure_location(
-			f"Test Block {suffix}", f"TB-{suffix}", "Block", parent_location=campus
-		)
+		block = ensure_location(f"Test Block {suffix}", f"TB-{suffix}", "Block", parent_location=campus)
 		floor_code = f"T{suffix}F2"
 
 		floor, rooms = ensure_classroom_floor(block, floor_code, 8)
 		second_floor, second_rooms = ensure_classroom_floor(block, floor_code, 8)
 
-		self.assertEqual(
-			frappe.db.get_value("Location", floor, "custom_it_location_type"), "Floor"
-		)
+		self.assertEqual(frappe.db.get_value("Location", floor, "custom_it_location_type"), "Floor")
 		self.assertEqual(len(rooms), 8)
 		self.assertEqual(second_floor, floor)
 		self.assertEqual(second_rooms, rooms)
@@ -81,11 +66,9 @@ class IntegrationTestAssetLocation(IntegrationTestCase):
 		)
 
 	def _insert_branch(self, branch_name):
-		return frappe.get_doc({"doctype": "Branch", "branch": branch_name}).insert(
-			ignore_permissions=True
-		)
+		return frappe.get_doc({"doctype": "Branch", "branch": branch_name}).insert(ignore_permissions=True)
 
 	def _insert_student_batch(self, batch_name):
-		return frappe.get_doc(
-			{"doctype": "Student Batch Name", "batch_name": batch_name}
-		).insert(ignore_permissions=True)
+		return frappe.get_doc({"doctype": "Student Batch Name", "batch_name": batch_name}).insert(
+			ignore_permissions=True
+		)

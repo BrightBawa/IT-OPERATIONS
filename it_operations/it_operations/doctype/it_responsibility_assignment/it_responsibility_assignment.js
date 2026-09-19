@@ -1,5 +1,7 @@
 frappe.ui.form.on("IT Responsibility Assignment", {
 	setup(frm) {
+		frm.set_query("employee", () => ({ filters: { status: "Active" } }));
+		frm.set_query("supervisor", () => ({ filters: { status: "Active" } }));
 		frm.set_query("responsibility_type", () => ({ filters: { is_active: 1 } }));
 		frm.set_query("checklist_template", () => ({
 			filters: {

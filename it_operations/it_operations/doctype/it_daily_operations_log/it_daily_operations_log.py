@@ -7,7 +7,6 @@ from frappe.utils import flt, getdate, now_datetime, nowdate
 
 from it_operations.permissions import can_access_employee, employee_user
 
-
 ADDRESSED_STATUSES = {"OK", "Fault", "Exception", "Not Applicable"}
 ISSUE_STATUSES = {"Fault", "Exception"}
 PASSING_DEVICE_VALUES = {
@@ -42,10 +41,13 @@ class ITDailyOperationsLog(Document):
 	def validate(self):
 		self._validate_identity_is_unchanged()
 		self._validate_checklist_integrity()
+		self._validate_activity_entries()
 		self._validate_issue_remarks()
 
 	def before_submit(self):
-		unaddressed = [row.idx for row in self.check_items if row.mandatory and row.status not in ADDRESSED_STATUSES]
+		unaddressed = [
+			row.idx for row in self.check_items if row.mandatory and row.status not in ADDRESSED_STATUSES
+		]
 		if unaddressed:
 			frappe.throw(
 				_("Address all mandatory checklist items before submission. Pending rows: {0}").format(
@@ -66,15 +68,19 @@ class ITDailyOperationsLog(Document):
 			self.employee = frappe.db.get_value(
 				"Employee", {"user_id": frappe.session.user, "status": "Active"}, "name"
 			)
-		if self.employee:
-			details = frappe.db.get_value(
-				"Employee", self.employee, ["employee_name", "user_id", "reports_to"], as_dict=True
-			)
-			if details:
-				self.employee_name = details.employee_name
-				self.assigned_user = details.user_id
-				if not self.supervisor:
-					self.supervisor = details.reports_to
+		if not self.employee:
+			frappe.throw(_("Employee is required."))
+
+		details = frappe.db.get_value(
+			"Employee", self.employee, ["employee_name", "user_id", "reports_to"], as_dict=True
+		)
+		if not details:
+			frappe.throw(_("Employee {0} does not exist.").format(frappe.bold(self.employee)))
+
+		self.employee_name = details.employee_name
+		self.assigned_user = details.user_id
+		if not self.supervisor:
+			self.supervisor = details.reports_to
 		self.supervisor_user = employee_user(self.supervisor)
 		self.log_key = f"{getdate(self.operation_date).isoformat()}::{self.employee}"
 
@@ -96,6 +102,10 @@ class ITDailyOperationsLog(Document):
 			frappe.throw(_("Employee, Operation Date, and Supervisor cannot be changed after creation."))
 
 	def _validate_checklist_integrity(self):
+		source_keys = [row.source_key for row in self.check_items if row.source_key]
+		if len(source_keys) != len(set(source_keys)):
+			frappe.throw(_("Generated checklist rows must have unique source keys."))
+
 		if self.is_new():
 			return
 		old = self.get_doc_before_save()
@@ -140,6 +150,27 @@ class ITDailyOperationsLog(Document):
 
 		if not self.flags.from_generation and len(current_rows) != len(self.check_items):
 			frappe.throw(_("Checklist rows can only be added by regeneration."))
+
+	def _validate_activity_entries(self):
+		for row in self.activity_entries:
+			row.summary = (row.summary or "").strip()
+			row.details = (row.details or "").strip() or None
+			if row.duration_minutes is not None and row.duration_minutes < 0:
+				frappe.throw(_("Row {0}: Duration cannot be negative.").format(row.idx))
+
+			if not row.equipment:
+				continue
+			equipment_location = frappe.db.get_value("IT Equipment", row.equipment, "location")
+			if not equipment_location:
+				frappe.throw(
+					_("Activity row {0}: Equipment {1} does not exist.").format(row.idx, row.equipment)
+				)
+			if row.location and row.location != equipment_location:
+				frappe.throw(
+					_("Activity row {0}: Equipment and Asset Location do not match.").format(row.idx)
+				)
+			if not row.location:
+				row.location = equipment_location
 
 	def _stamp_check_items(self):
 		old_rows = {}
@@ -188,7 +219,11 @@ class ITDailyOperationsLog(Document):
 				row.logged_by = frappe.session.user
 
 	def _validate_issue_remarks(self):
-		missing = [row.idx for row in self.check_items if row.status in ISSUE_STATUSES and not (row.remarks or "").strip()]
+		missing = [
+			row.idx
+			for row in self.check_items
+			if row.status in ISSUE_STATUSES and not (row.remarks or "").strip()
+		]
 		if missing:
 			frappe.throw(
 				_("Remarks are required for faults and exceptions. Rows: {0}").format(
@@ -201,7 +236,9 @@ class ITDailyOperationsLog(Document):
 		self.completed_checks = sum(row.status in ADDRESSED_STATUSES for row in self.check_items)
 		self.fault_count = sum(row.status == "Fault" for row in self.check_items)
 		self.exception_count = sum(row.status == "Exception" for row in self.check_items)
-		self.completion_rate = flt(self.completed_checks * 100 / self.total_checks, 2) if self.total_checks else 0
+		self.completion_rate = (
+			flt(self.completed_checks * 100 / self.total_checks, 2) if self.total_checks else 0
+		)
 
 	@frappe.whitelist()
 	def regenerate_from_assignments(self):
@@ -270,7 +307,9 @@ def _rows_for_assignment(assignment):
 			"location": point.location if point and point.location else assignment.location,
 			"monitoring_point": item.monitoring_point,
 			"equipment": item.equipment,
-			"device_name": equipment.equipment_name if equipment else (point.camera_identifier if point else None),
+			"device_name": equipment.equipment_name
+			if equipment
+			else (point.camera_identifier if point else None),
 			"channel_name": point.nvr_channel if point else None,
 			"ip_address": point.ip_address if point else None,
 			"model": point.camera_model if point else None,
@@ -342,3 +381,10 @@ def generate_logs(operation_date=None, employee=None, regenerate=False):
 			)
 		result.append(doc.name)
 	return result
+
+
+def on_doctype_update():
+	frappe.db.add_index("IT Daily Operations Log", ["operation_date", "docstatus"])
+	frappe.db.add_index("IT Daily Operations Log", ["assigned_user", "operation_date"])
+	frappe.db.add_index("IT Daily Operations Log", ["supervisor_user", "operation_date"])
+	frappe.db.add_index("IT Daily Operations Log", ["employee", "operation_date"])

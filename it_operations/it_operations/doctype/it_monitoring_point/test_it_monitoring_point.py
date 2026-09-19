@@ -1,22 +1,36 @@
-# Copyright (c) 2026, GCIHS and Contributors
-# See license.txt
-
-# import frappe
+import frappe
 from frappe.tests import IntegrationTestCase
 
-
-# On IntegrationTestCase, the doctype test records and all
-# link-field test record dependencies are recursively loaded
-# Use these module variables to add/remove to/from that list
-EXTRA_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
-IGNORE_TEST_RECORD_DEPENDENCIES = []  # eg. ["User"]
-
+EXTRA_TEST_RECORD_DEPENDENCIES = []
+IGNORE_TEST_RECORD_DEPENDENCIES = ["Location", "IT Equipment"]
 
 
 class IntegrationTestITMonitoringPoint(IntegrationTestCase):
-	"""
-	Integration tests for ITMonitoringPoint.
-	Use this class for testing interactions between multiple components.
-	"""
+	def test_rejects_invalid_ip_address(self):
+		doc = frappe.get_doc(
+			{
+				"doctype": "IT Monitoring Point",
+				"point_name": "Test Invalid IP",
+				"point_type": "Camera",
+				"camera_identifier": "TEST-CAM",
+				"ip_address": "999.1.1.1",
+			}
+		)
+		doc.before_validate()
+		with self.assertRaises(frappe.ValidationError):
+			doc.validate()
 
-	pass
+	def test_non_camera_point_clears_camera_recorder_fields(self):
+		doc = frappe.get_doc(
+			{
+				"doctype": "IT Monitoring Point",
+				"point_name": "Test Server Point",
+				"point_type": "Server",
+				"nvr_name": "Should be cleared",
+				"nvr_channel": "Should be cleared",
+			}
+		)
+		doc.before_validate()
+		doc.validate()
+		self.assertIsNone(doc.nvr_name)
+		self.assertIsNone(doc.nvr_channel)

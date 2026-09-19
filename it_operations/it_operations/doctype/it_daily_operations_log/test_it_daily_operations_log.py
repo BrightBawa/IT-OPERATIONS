@@ -8,7 +8,6 @@ from it_operations.it_operations.doctype.it_daily_operations_log.it_daily_operat
 	generate_logs,
 )
 
-
 EXTRA_TEST_RECORD_DEPENDENCIES = []
 IGNORE_TEST_RECORD_DEPENDENCIES = [
 	"Employee",
@@ -215,5 +214,9 @@ class IntegrationTestITDailyOperationsLog(IntegrationTestCase):
 		for row in log.check_items:
 			self.assertEqual(row.status, "OK")
 			for field in PASSING_DEVICE_VALUES:
-				expected = PASSING_DEVICE_VALUES[field] if field in DEVICE_REQUIREMENTS[row.device_kind] else "Not Applicable"
+				expected = (
+					PASSING_DEVICE_VALUES[field]
+					if field in DEVICE_REQUIREMENTS[row.device_kind]
+					else "Not Applicable"
+				)
 				self.assertEqual(row.get(field), expected)
