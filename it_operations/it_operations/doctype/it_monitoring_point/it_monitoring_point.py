@@ -4,15 +4,22 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-EQUIPMENT_TYPE_BY_POINT_TYPE = {
-	"Camera": "CCTV Camera",
+POINT_TYPE_BY_EQUIPMENT_TYPE = {
+	"CCTV Camera": "Camera",
 	"Network Video Recorder": "Network Video Recorder",
 	"Television": "Television",
 	"Wireless Access Point": "Wireless Access Point",
 	"Network Switch": "Network Switch",
 	"Router": "Router",
 	"Server": "Server",
+	"Computer": "Network Endpoint",
+	"Printer": "Network Endpoint",
+	"Other": "Other",
 }
+
+EQUIPMENT_TYPES_BY_POINT_TYPE = {}
+for equipment_type, point_type in POINT_TYPE_BY_EQUIPMENT_TYPE.items():
+	EQUIPMENT_TYPES_BY_POINT_TYPE.setdefault(point_type, set()).add(equipment_type)
 
 
 class ITMonitoringPoint(Document):
@@ -66,11 +73,11 @@ class ITMonitoringPoint(Document):
 		if equipment.location != self.location:
 			frappe.throw(_("The Monitoring Point and Equipment must use the same Asset Location."))
 
-		expected_type = EQUIPMENT_TYPE_BY_POINT_TYPE.get(self.point_type)
-		if expected_type and equipment.equipment_type != expected_type:
+		allowed_types = EQUIPMENT_TYPES_BY_POINT_TYPE.get(self.point_type)
+		if allowed_types and equipment.equipment_type not in allowed_types:
 			frappe.throw(
-				_("A {0} Monitoring Point requires {1} Equipment.").format(
-					frappe.bold(self.point_type), frappe.bold(expected_type)
+				_("A {0} Monitoring Point is not compatible with {1} Equipment.").format(
+					frappe.bold(self.point_type), frappe.bold(equipment.equipment_type)
 				)
 			)
 		if equipment.monitoring_point and equipment.monitoring_point != self.name:

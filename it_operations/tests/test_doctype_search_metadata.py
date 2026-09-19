@@ -7,7 +7,10 @@ DOCTYPE_ROOT = Path(__file__).parents[1] / "it_operations" / "doctype"
 SEARCHABLE_DOCTYPES = {
 	"it_checklist_template": ("template_name", {"responsibility_type"}),
 	"it_daily_operations_log": ("employee_name", {"employee", "operation_date", "status"}),
-	"it_equipment": ("equipment_name", {"equipment_type", "location", "status"}),
+	"it_equipment": (
+		"equipment_name",
+		{"equipment_type", "location", "deployment_status", "status"},
+	),
 	"it_location": ("location_name", {"location_code", "full_location_path"}),
 	"it_monitoring_point": ("point_name", {"location", "point_type"}),
 	"it_responsibility_assignment": (

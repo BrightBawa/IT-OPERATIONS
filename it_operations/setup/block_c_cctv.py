@@ -2,8 +2,8 @@ import re
 
 import frappe
 
-from it_operations.setup.locations import ensure_location, seed as seed_locations
-
+from it_operations.setup.locations import ensure_location
+from it_operations.setup.locations import seed as seed_locations
 
 TEMPLATE_NAME = "Block C IT Equipment Daily Inspection"
 RESPONSIBILITY_TYPE = "Block IT Equipment Inspection"
@@ -33,15 +33,19 @@ CAMERAS = (
 	("10.143.150.21", "DS-2CD1143G0-IUF", "J62513748", "B05F01-AR02 (1-010)", "10S3-B08F1CR02 (1-010)"),
 	("10.143.150.20", "DS-2CD1143G0-IUF", "J62513769", "B05F0-AR08 (1-023)", "11S3-B08F0CR08 (1-023)"),
 	("10.143.150.19", "DS-2CD1143G0-I", "F88078203", "B05F1-AR04 (1-006)", "10S1-B08F1CR04 (1-006)"),
-	("10.143.150.18", "DS-2CD1143G0-IUF", "J62513766", "B05F0-AR01 OFFICE (1-003)", "OFFICE-B08F0CR01 (1-003)"),
+	(
+		"10.143.150.18",
+		"DS-2CD1143G0-IUF",
+		"J62513766",
+		"B05F0-AR01 OFFICE (1-003)",
+		"OFFICE-B08F0CR01 (1-003)",
+	),
 	("10.143.150.17", "DS-2CD2143G0-IU", "F29672448", "B05F1-AR01 (1-005)", "10S4-B08F1CR01 (1-005)"),
 	("10.143.150.16", "DS-2CD1143G0-IUF", "J62513753", "B05F1-AR03 (1-007)", "10S2-B08F1CR03 (1-007)"),
 	("10.143.150.15", "DS-2CD1143G0-IUF", "J62513754", "B05F0-AR06 (1-011)", "11S1-B08F0CR06 (1-011)"),
 )
 
-CLASSROOM_CHANNEL_PATTERN = re.compile(
-	r"^(?P<assigned_class>\d{2}[A-Z]\d+)-(?P<room_code>B\d+F\d+CR\d+)"
-)
+CLASSROOM_CHANNEL_PATTERN = re.compile(r"^(?P<assigned_class>\d{2}[A-Z]\d+)-(?P<room_code>B\d+F\d+CR\d+)")
 ROOM_CODE_PATTERN = re.compile(r"(B\d+F\d+CR\d+)")
 CORRIDOR_CHANNEL_PATTERN = re.compile(r"^24CR-(?P<floor>\d+)C-")
 
@@ -114,12 +118,8 @@ def _assigned_class(channel_name):
 
 def _set_assigned_class(location, student_batch):
 	if not frappe.db.exists("Student Batch Name", student_batch):
-		frappe.throw(
-			f"Cannot assign room {location}: Student Batch Name {student_batch} does not exist."
-		)
-	frappe.db.set_value(
-		"Location", location, "custom_assigned_class", student_batch, update_modified=False
-	)
+		frappe.throw(f"Cannot assign room {location}: Student Batch Name {student_batch} does not exist.")
+	frappe.db.set_value("Location", location, "custom_assigned_class", student_batch, update_modified=False)
 
 
 def _ensure_device(
@@ -134,31 +134,62 @@ def _ensure_device(
 	equipment_filters = {"serial_number": serial_number} if serial_number else {"equipment_name": device_name}
 	equipment = frappe.db.get_value("IT Equipment", equipment_filters, "name")
 	if not equipment:
-		equipment = frappe.get_doc(
-			{
-				"doctype": "IT Equipment",
-				"equipment_name": device_name,
-				"equipment_type": device_type,
-				"serial_number": serial_number,
-				"location": location,
-				"status": "Operational",
-				"is_active": 1,
-				"notes": _device_notes(ip_address, model, channel_name),
-			}
-		).insert(ignore_permissions=True).name
+		equipment = (
+			frappe.get_doc(
+				{
+					"doctype": "IT Equipment",
+					"equipment_name": device_name,
+					"equipment_type": device_type,
+					"serial_number": serial_number,
+					"location": location,
+					"status": "Operational",
+					"is_active": 1,
+					"notes": _device_notes(ip_address, model, channel_name),
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
 	elif frappe.db.get_value("IT Equipment", equipment, "location") != location:
 		frappe.db.set_value("IT Equipment", equipment, "location", location, update_modified=False)
 
 	legacy_point_name = f"Block C - {device_name}"
 	point_name = device_name if device_type == "Network Video Recorder" else legacy_point_name
-	point = frappe.db.get_value("IT Monitoring Point", {"point_name": point_name}, "name")
-	if not point and point_name != legacy_point_name and frappe.db.exists("IT Monitoring Point", legacy_point_name):
+	point = frappe.db.get_value("IT Equipment", equipment, "monitoring_point")
+	if not point:
+		point = frappe.db.get_value("IT Monitoring Point", {"point_name": point_name}, "name")
+	if (
+		not point
+		and point_name != legacy_point_name
+		and frappe.db.exists("IT Monitoring Point", legacy_point_name)
+	):
 		point = frappe.rename_doc("IT Monitoring Point", legacy_point_name, point_name, force=True)
 	if not point:
-		point = frappe.get_doc(
+		point = (
+			frappe.get_doc(
+				{
+					"doctype": "IT Monitoring Point",
+					"point_name": point_name,
+					"location": location,
+					"point_type": "Camera" if device_type == "CCTV Camera" else "Network Video Recorder",
+					"is_active": 1,
+					"camera_identifier": device_name,
+					"camera_model": model,
+					"ip_address": ip_address,
+					"nvr_channel": channel_name,
+					"equipment": equipment,
+					"view_description": f"Block C CCTV view: {channel_name}"
+					if channel_name
+					else "Block C recorder",
+				}
+			)
+			.insert(ignore_permissions=True)
+			.name
+		)
+	else:
+		point_doc = frappe.get_doc("IT Monitoring Point", point)
+		point_doc.update(
 			{
-				"doctype": "IT Monitoring Point",
-				"point_name": point_name,
 				"location": location,
 				"point_type": "Camera" if device_type == "CCTV Camera" else "Network Video Recorder",
 				"is_active": 1,
@@ -167,11 +198,12 @@ def _ensure_device(
 				"ip_address": ip_address,
 				"nvr_channel": channel_name,
 				"equipment": equipment,
-				"view_description": f"Block C CCTV view: {channel_name}" if channel_name else "Block C recorder",
+				"view_description": f"Block C CCTV view: {channel_name}"
+				if channel_name
+				else "Block C recorder",
 			}
-		).insert(ignore_permissions=True).name
-	elif frappe.db.get_value("IT Monitoring Point", point, "location") != location:
-		frappe.db.set_value("IT Monitoring Point", point, "location", location, update_modified=False)
+		)
+		point_doc.save(ignore_permissions=True)
 
 	if not frappe.db.get_value("IT Equipment", equipment, "monitoring_point"):
 		frappe.db.set_value("IT Equipment", equipment, "monitoring_point", point, update_modified=False)
@@ -205,7 +237,9 @@ def _get_or_create_template():
 def _append_template_item(template, point, equipment, check_type):
 	if any(row.monitoring_point == point or row.equipment == equipment for row in template.items):
 		return False
-	device = frappe.db.get_value("IT Equipment", equipment, ["equipment_name", "equipment_type"], as_dict=True)
+	device = frappe.db.get_value(
+		"IT Equipment", equipment, ["equipment_name", "equipment_type"], as_dict=True
+	)
 	is_nvr = device.equipment_type == "Network Video Recorder"
 	instructions = (
 		"Confirm the NVR is online and working, then verify recording and playback. Record storage or hard-drive "

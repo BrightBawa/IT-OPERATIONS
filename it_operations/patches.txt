@@ -12,3 +12,5 @@ it_operations.patches.link_room_classes_to_student_batches
 it_operations.patches.create_responsibility_types
 it_operations.patches.seed_block_c_cctv
 it_operations.patches.migrate_to_asset_locations
+it_operations.patches.create_equipment_monitoring_points
+it_operations.patches.set_equipment_deployment_status

@@ -283,22 +283,38 @@ def _rows_for_assignment(assignment):
 			frappe.db.get_value(
 				"IT Monitoring Point",
 				item.monitoring_point,
-				["location", "camera_identifier", "camera_model", "ip_address", "nvr_channel"],
+				[
+					"location",
+					"camera_identifier",
+					"camera_model",
+					"ip_address",
+					"nvr_channel",
+					"is_active",
+				],
 				as_dict=True,
 			)
 			if item.monitoring_point
 			else None
 		)
+		equipment_fields = ["equipment_name", "equipment_type", "serial_number", "is_active"]
+		if frappe.get_meta("IT Equipment").has_field("deployment_status"):
+			equipment_fields.append("deployment_status")
 		equipment = (
 			frappe.db.get_value(
 				"IT Equipment",
 				item.equipment,
-				["equipment_name", "equipment_type", "serial_number"],
+				equipment_fields,
 				as_dict=True,
 			)
 			if item.equipment
 			else None
 		)
+		if point and not point.is_active:
+			continue
+		if equipment and (
+			not equipment.is_active or equipment.get("deployment_status") not in (None, "Deployed")
+		):
+			continue
 		device_kind = equipment.equipment_type if equipment else None
 		row = {
 			"check_title": item.check_title,

@@ -6,6 +6,8 @@ const equipment_type_by_point_type = {
 	"Network Switch": "Network Switch",
 	Router: "Router",
 	Server: "Server",
+	"Network Endpoint": ["in", ["Computer", "Printer"]],
+	Other: "Other",
 };
 
 frappe.ui.form.on("IT Monitoring Point", {

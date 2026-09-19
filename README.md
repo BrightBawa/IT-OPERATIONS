@@ -30,7 +30,9 @@ The initial Block C inventory reuses the general IT Operations model instead of 
 - Block C includes second floor `B08F2` with classrooms `B08F2CR01` through `B08F2CR08`.
 - Room locations have an editable **Assigned Class** link to `Student Batch Name`. The supplied classroom channels populate this field from matching student batches (for example, `10C2-B08F1CR06` links batch `10C2` to room `B08F1CR06`). Corridor channels such as `24CR-0C` and `24CR-1C` are assigned to their corresponding floor and do not receive a class.
 - `IT Equipment` stores each of the 23 cameras and 2 NVRs, including camera serial numbers.
-- `IT Monitoring Point` stores the device name, model, IP address, channel, and physical location. IP values are operational metadata and can be updated without changing the equipment identity.
+- Every `IT Equipment` record requires a standard ERPNext Asset Location. Creating equipment automatically creates its `IT Monitoring Point`; the point inherits its equipment, type, active state, and Asset Location. Later equipment location changes are synchronized to the point.
+- Equipment tracks **Deployment Status** separately from **Operational Condition**. For example, equipment can be `Operational` while `In Storage`, or `Deployed` while `Faulty`. Monitoring is active only for administratively active, deployed equipment whose condition is `Operational` or `Degraded`.
+- `IT Monitoring Point` stores the device name, model, IP address, channel, and inherited physical location. IP values are operational metadata and can be updated without changing the equipment identity.
 - `IT Responsibility Type` provides selectable duties. **Block IT Equipment Inspection** is the umbrella daily responsibility for CCTV/NVRs, televisions/displays, and wireless access points in one assigned block.
 - `IT Checklist Template` stores one reusable **Block C IT Equipment Daily Inspection** list. It currently has the 25 supplied CCTV/NVR devices; televisions and access points can be appended when their inventories are supplied.
 - `IT Responsibility Assignment` links that template and Block C to the technician chosen by the IT Manager.

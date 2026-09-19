@@ -56,8 +56,6 @@ class ITChecklistTemplate(Document):
 				frappe.throw(
 					_("Row {0}: Monitoring Point {1} does not exist.").format(row.idx, row.monitoring_point)
 				)
-			if self.is_active and not point.is_active:
-				frappe.throw(_("Row {0}: Select an active Monitoring Point.").format(row.idx))
 			if row.check_type == "Camera" and point.point_type != "Camera":
 				frappe.throw(_("Row {0}: Camera checks require a camera Monitoring Point.").format(row.idx))
 
@@ -65,8 +63,6 @@ class ITChecklistTemplate(Document):
 			equipment_is_active = frappe.db.get_value("IT Equipment", row.equipment, "is_active")
 			if equipment_is_active is None:
 				frappe.throw(_("Row {0}: Equipment {1} does not exist.").format(row.idx, row.equipment))
-			if self.is_active and not equipment_is_active:
-				frappe.throw(_("Row {0}: Select active Equipment.").format(row.idx))
 
 		if point and point.equipment and row.equipment and point.equipment != row.equipment:
 			frappe.throw(_("Row {0}: The Monitoring Point is linked to different Equipment.").format(row.idx))
