@@ -6,6 +6,7 @@ from it_operations.it_operations.doctype.it_daily_operations_log.it_daily_operat
 	DEVICE_REQUIREMENTS,
 	PASSING_DEVICE_VALUES,
 	generate_logs,
+	generate_logs_with_status,
 )
 
 EXTRA_TEST_RECORD_DEPENDENCIES = []
@@ -31,10 +32,12 @@ class IntegrationTestITDailyOperationsLog(IntegrationTestCase):
 			self.skipTest("No active Employee linked to an enabled User is available")
 
 		test_day = {
-			"test_device_result_is_calculated_from_simple_checks": 1,
-			"test_generation_is_idempotent_and_refreshes_missing_rows": 2,
-			"test_submission_requires_mandatory_checks_and_fault_remarks": 3,
-			"test_equipment_types_only_require_applicable_checks": 4,
+			"test_device_result_is_calculated_from_simple_checks": 5,
+			"test_generation_is_idempotent_and_refreshes_missing_rows": 6,
+			"test_submission_requires_mandatory_checks_and_fault_remarks": 7,
+			"test_equipment_types_only_require_applicable_checks": 8,
+			"test_holiday_does_not_generate_a_log": 9,
+			"test_weekend_does_not_generate_a_log": 10,
 		}[self._testMethodName]
 		self.test_date = getdate(add_days("2098-01-01", test_day))
 		self.suffix = frappe.generate_hash(length=8)
@@ -220,3 +223,51 @@ class IntegrationTestITDailyOperationsLog(IntegrationTestCase):
 					else "Not Applicable"
 				)
 				self.assertEqual(row.get(field), expected)
+
+	def test_holiday_does_not_generate_a_log(self):
+		holiday_list = frappe.get_doc(
+			{
+				"doctype": "Holiday List",
+				"holiday_list_name": f"IT Operations Test Holidays {self.suffix}",
+				"from_date": self.test_date,
+				"to_date": self.test_date,
+				"holidays": [
+					{
+						"holiday_date": self.test_date,
+						"description": "Test Public Holiday",
+					}
+				],
+			}
+		).insert(ignore_permissions=True)
+		if frappe.db.exists("DocType", "Holiday List Assignment"):
+			assignment = frappe.get_doc(
+				{
+					"doctype": "Holiday List Assignment",
+					"applicable_for": "Employee",
+					"assigned_to": self.employee,
+					"holiday_list": holiday_list.name,
+					"from_date": self.test_date,
+				}
+			).insert(ignore_permissions=True)
+			assignment.submit()
+		else:
+			frappe.db.set_value("Employee", self.employee, "holiday_list", holiday_list.name)
+
+		result = generate_logs_with_status(self.test_date, employee=self.employee)
+
+		self.assertEqual(result.logs, [])
+		self.assertEqual(result.non_working_day.code, "holiday")
+		self.assertIn("Test Public Holiday", result.non_working_day.reason)
+		self.assertFalse(
+			frappe.db.exists(
+				"IT Daily Operations Log",
+				{"log_key": f"{self.test_date.isoformat()}::{self.employee}"},
+			)
+		)
+
+	def test_weekend_does_not_generate_a_log(self):
+		result = generate_logs_with_status(self.test_date, employee=self.employee)
+
+		self.assertEqual(result.logs, [])
+		self.assertEqual(result.non_working_day.code, "weekend")
+		self.assertIn("Saturday", result.non_working_day.reason)

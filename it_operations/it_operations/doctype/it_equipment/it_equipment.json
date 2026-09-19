@@ -2,32 +2,164 @@
  "actions": [],
  "allow_import": 1,
  "autoname": "IT-EQP-.#####",
+ "creation": "2026-09-19 13:43:46.666795",
  "doctype": "DocType",
  "engine": "InnoDB",
- "field_order": ["equipment_name","equipment_type","asset","serial_number","column_break_equipment","location","deployment_status","monitoring_point","status","is_active","notes"],
- "fields": [
-  {"fieldname":"equipment_name","fieldtype":"Data","in_list_view":1,"label":"Equipment Name","reqd":1},
-  {"fieldname":"equipment_type","fieldtype":"Select","in_list_view":1,"in_standard_filter":1,"label":"Equipment Type","options":"CCTV Camera\nNetwork Video Recorder\nTelevision\nWireless Access Point\nNetwork Switch\nRouter\nServer\nComputer\nPrinter\nOther","reqd":1},
-  {"fieldname":"asset","fieldtype":"Link","in_standard_filter":1,"label":"ERPNext Asset","options":"Asset"},
-  {"fieldname":"serial_number","fieldtype":"Data","in_standard_filter":1,"label":"Serial Number","unique":1},
-  {"fieldname":"column_break_equipment","fieldtype":"Column Break"},
-  {"fieldname":"location","fieldtype":"Link","in_list_view":1,"in_standard_filter":1,"label":"Asset Location","options":"Location","reqd":1},
-  {"default":"Deployed","description":"Tracks whether the equipment is in use, held in storage, reserved, under maintenance, or retired. Operational Condition separately records whether it is working.","fieldname":"deployment_status","fieldtype":"Select","in_list_view":1,"in_standard_filter":1,"label":"Deployment Status","options":"In Storage\nReserved\nDeployed\nUnder Maintenance\nRetired","reqd":1},
-  {"fieldname":"monitoring_point","fieldtype":"Link","in_standard_filter":1,"label":"Monitoring Point","options":"IT Monitoring Point","read_only":1},
-  {"default":"Operational","description":"The physical and operational condition of the equipment, independent of whether it is deployed.","fieldname":"status","fieldtype":"Select","in_list_view":1,"in_standard_filter":1,"label":"Operational Condition","options":"Operational\nDegraded\nFaulty\nOut of Service\nRetired","reqd":1},
-  {"default":"1","description":"Administrative switch for retaining or disabling this inventory record. Monitoring is active only when this is selected and the equipment is deployed in a working condition.","fieldname":"is_active","fieldtype":"Check","in_standard_filter":1,"label":"Inventory Record Active"},
-  {"fieldname":"notes","fieldtype":"Small Text","label":"Notes"}
+ "field_order": [
+  "equipment_name",
+  "equipment_type",
+  "asset",
+  "serial_number",
+  "location",
+  "column_break_equipment",
+  "deployment_status",
+  "monitoring_point",
+  "status",
+  "is_active",
+  "section_break_hpgb",
+  "notes"
  ],
- "index_web_pages_for_search": 0,
+ "fields": [
+  {
+   "fieldname": "equipment_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Equipment Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "equipment_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Equipment Type",
+   "options": "CCTV Camera\nNetwork Video Recorder\nTelevision\nWireless Access Point\nNetwork Switch\nRouter\nServer\nComputer\nPrinter\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "asset",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "ERPNext Asset",
+   "options": "Asset"
+  },
+  {
+   "fieldname": "serial_number",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Serial Number",
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_equipment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Asset Location",
+   "options": "Location",
+   "reqd": 1
+  },
+  {
+   "default": "Deployed",
+   "description": "Tracks whether the equipment is in use, held in storage, reserved, under maintenance, or retired. Operational Condition separately records whether it is working.",
+   "fieldname": "deployment_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Deployment Status",
+   "options": "In Storage\nReserved\nDeployed\nUnder Maintenance\nRetired",
+   "reqd": 1
+  },
+  {
+   "fieldname": "monitoring_point",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Monitoring Point",
+   "options": "IT Monitoring Point",
+   "read_only": 1
+  },
+  {
+   "default": "Operational",
+   "description": "The physical and operational condition of the equipment, independent of whether it is deployed.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Operational Condition",
+   "options": "Operational\nDegraded\nFaulty\nOut of Service\nRetired",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "description": "Administrative switch for retaining or disabling this inventory record. Monitoring is active only when this is selected and the equipment is deployed in a working condition.",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_standard_filter": 1,
+   "label": "Inventory Record Active"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "section_break_hpgb",
+   "fieldtype": "Section Break"
+  }
+ ],
  "links": [],
+ "modified": "2026-09-19 13:51:54.269971",
+ "modified_by": "Administrator",
  "module": "IT Operations",
  "name": "IT Equipment",
+ "owner": "Administrator",
  "permissions": [
-  {"read":1,"role":"IT Operations User"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Supervisor"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"IT Operations Manager"},
-  {"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"share":1,"write":1,"role":"System Manager"}
+  {
+   "read": 1,
+   "role": "IT Operations User"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "IT Operations Supervisor",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "IT Operations Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
  ],
+ "row_format": "Dynamic",
  "search_fields": "equipment_name,equipment_type,asset,serial_number,location,deployment_status,monitoring_point,status",
  "show_title_field_in_link": 1,
  "sort_field": "modified",

@@ -39,11 +39,22 @@ def execute(filters=None):
 def get_columns():
 	return [
 		{"label": _("Month"), "fieldname": "month", "fieldtype": "Data", "width": 90},
-		{"label": _("Employee"), "fieldname": "employee", "fieldtype": "Link", "options": "Employee", "width": 130},
+		{
+			"label": _("Employee"),
+			"fieldname": "employee",
+			"fieldtype": "Link",
+			"options": "Employee",
+			"width": 130,
+		},
 		{"label": _("Employee Name"), "fieldname": "employee_name", "fieldtype": "Data", "width": 180},
-		{"label": _("Logs"), "fieldname": "expected_logs", "fieldtype": "Int", "width": 80},
+		{"label": _("Generated Logs"), "fieldname": "expected_logs", "fieldtype": "Int", "width": 110},
 		{"label": _("Submitted"), "fieldname": "submitted_logs", "fieldtype": "Int", "width": 90},
-		{"label": _("Avg Completion %"), "fieldname": "average_completion", "fieldtype": "Percent", "width": 130},
+		{
+			"label": _("Avg Completion %"),
+			"fieldname": "average_completion",
+			"fieldtype": "Percent",
+			"width": 130,
+		},
 		{"label": _("Faults"), "fieldname": "faults", "fieldtype": "Int", "width": 80},
 		{"label": _("Exceptions"), "fieldname": "exceptions", "fieldtype": "Int", "width": 90},
 	]

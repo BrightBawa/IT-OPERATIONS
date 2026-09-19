@@ -6,6 +6,7 @@ from frappe.model.document import Document
 from frappe.utils import flt, getdate, now_datetime, nowdate
 
 from it_operations.permissions import can_access_employee, employee_user
+from it_operations.workday import get_non_working_day, no_submission_message
 
 ADDRESSED_STATUSES = {"OK", "Fault", "Exception", "Not Applicable"}
 ISSUE_STATUSES = {"Fault", "Exception"}
@@ -39,10 +40,18 @@ class ITDailyOperationsLog(Document):
 		self._set_summary()
 
 	def validate(self):
+		self._validate_working_day()
 		self._validate_identity_is_unchanged()
 		self._validate_checklist_integrity()
 		self._validate_activity_entries()
 		self._validate_issue_remarks()
+
+	def _validate_working_day(self):
+		if not self.is_new():
+			return
+		non_working_day = get_non_working_day(self.operation_date, self.employee)
+		if non_working_day:
+			frappe.throw(no_submission_message(self.operation_date, non_working_day))
 
 	def before_submit(self):
 		unaddressed = [
@@ -246,7 +255,9 @@ class ITDailyOperationsLog(Document):
 			frappe.throw(_("Only draft logs can be regenerated."))
 		if not frappe.has_permission(self.doctype, "write", doc=self):
 			frappe.throw(_("You do not have permission to update this log."), frappe.PermissionError)
-		generate_logs(self.operation_date, employee=self.employee, regenerate=True)
+		result = generate_logs_with_status(self.operation_date, employee=self.employee, regenerate=True)
+		if result.non_working_day:
+			frappe.msgprint(no_submission_message(self.operation_date, result.non_working_day))
 		return self.name
 
 
@@ -349,16 +360,41 @@ def _rows_for_assignment(assignment):
 	return rows
 
 
-def generate_logs(operation_date=None, employee=None, regenerate=False):
-	"""Generate or refresh one draft log per active staff member, without duplicate rows."""
+def _generate_logs(operation_date=None, employee=None, regenerate=False):
 	operation_date = getdate(operation_date or nowdate())
+	result = frappe._dict(
+		operation_date=operation_date,
+		logs=[],
+		skipped=[],
+		non_working_day=None,
+	)
+	non_working_day = get_non_working_day(operation_date, employee)
+	if non_working_day and (
+		employee or non_working_day.code == "weekend" or non_working_day.get("is_global")
+	):
+		result.non_working_day = non_working_day
+		if employee:
+			result.skipped.append(
+				frappe._dict(employee=employee, reason=non_working_day.reason, code=non_working_day.code)
+			)
+		return result
+
 	grouped = defaultdict(list)
 	for assignment in _active_assignments(operation_date, employee):
 		if _employee_is_active(assignment.employee):
 			grouped[assignment.employee].append(assignment)
 
-	result = []
 	for employee_name, assignments in grouped.items():
+		non_working_day = get_non_working_day(operation_date, employee_name)
+		if non_working_day:
+			result.skipped.append(
+				frappe._dict(
+					employee=employee_name,
+					reason=non_working_day.reason,
+					code=non_working_day.code,
+				)
+			)
+			continue
 		new_rows = [row for assignment in assignments for row in _rows_for_assignment(assignment)]
 		if not new_rows:
 			continue
@@ -374,7 +410,7 @@ def generate_logs(operation_date=None, employee=None, regenerate=False):
 						existing.add(row["source_key"])
 				doc.flags.from_generation = True
 				doc.save(ignore_permissions=True)
-			result.append(name)
+			result.logs.append(name)
 			continue
 
 		doc = frappe.get_doc(
@@ -395,8 +431,18 @@ def generate_logs(operation_date=None, employee=None, regenerate=False):
 				"IT Daily Operations Log",
 				frappe.db.get_value("IT Daily Operations Log", {"log_key": log_key}, "name"),
 			)
-		result.append(doc.name)
+		result.logs.append(doc.name)
 	return result
+
+
+def generate_logs(operation_date=None, employee=None, regenerate=False):
+	"""Generate or refresh one draft log per active employee on a working day."""
+	return _generate_logs(operation_date, employee, regenerate).logs
+
+
+def generate_logs_with_status(operation_date=None, employee=None, regenerate=False):
+	"""Generate logs and return reasons for employees skipped on non-working days."""
+	return _generate_logs(operation_date, employee, regenerate)
 
 
 def on_doctype_update():
